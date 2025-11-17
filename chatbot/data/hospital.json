@@ -1,0 +1,366 @@
+{
+  "hospitals": [
+    {
+      "name": "RSUP Dr. Hasan Sadikin (RSHS)",
+      "class": "Class A General Hospital (Top-tier national referral center)",
+      "specialties": [
+        "Anestesi (Anesthesiology)",
+        "Bedah (Surgery - General)",
+        "Gizi dan Dietetik (Nutrition and Dietetics)",
+        "Infertility",
+        "Internal Medicine (Penyakit Dalam)",
+        "Kebidanan dan Kandungan (Obstetrics and Gynecology)",
+        "Kesehatan Anak (Pediatrics)",
+        "Konseling Kesehatan Mental (Mental Health Counseling)",
+        "Kulit dan Kelamin (Dermatology & Venereology)",
+        "Mata (Ophthalmology)",
+        "Paru (Pulmonology)",
+        "Patologi (Pathology)",
+        "Radiologi (Radiology)",
+        "Rehabilitasi Medik (Medical Rehabilitation)"
+      ],
+      "location": {
+        "latitude": -6.89816942648441,
+        "longitude": 107.59840609589006
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD): 24/7",
+        "Layanan Rawat Jalan (Outpatient Services)",
+        "Layanan Rawat Inap (Inpatient Services): 929 beds",
+        "ICU (Intensive Care Unit)",
+        "NICU (Neonatal Intensive Care Unit)",
+        "Layanan Bedah (Surgical Services)",
+        "Radiologi (X-rays, CT Scans, MRIs, USG, Mammography)",
+        "Farmasi (Pharmacy)",
+        "Laboratorium (Implicitly included)",
+        "Rehabilitasi Medik",
+        "Layanan Eksekutif",
+        "Sistem Informasi Tempat Tidur (Online Bed Monitoring System)"
+      ]
+    },
+    {
+      "name": "Santosa Hospital Bandung Central",
+      "class": "Class A General Hospital (Private)",
+      "specialties": [
+        "Klinik Umum (General Clinic)",
+        "Klinik Gigi (Dental - 7 specializations)",
+        "Klinik Spesialis Dalam (Internal Medicine - 7 sub-specialties)",
+        "Klinik Anak (Pediatrics - 4 sub-specialties)",
+        "Klinik Obstetri dan Ginekologi (5 sub-specialties including Fetomaternal)",
+        "Klinik Bedah (Surgery - 4 sub-specialties)",
+        "Klinik Bedah Ortopedi dan Traumatologi (Orthopedics - 8 sub-specialties)",
+        "Klinik Urologi",
+        "Klinik Bedah Saraf (Neurosurgery)",
+        "Klinik Bedah Plastik (Plastic Surgery)",
+        "Klinik Jantung dan Pembuluh Darah (Cardiology - 5 sub-specialties)",
+        "Klinik Mata (Ophthalmology)",
+        "Klinik THT-KL (ENT)",
+        "Saraf (Neurology)",
+        "Kulit (Dermatology)",
+        "Paru (Pulmonology)",
+        "Klinik Akupuntur",
+        "Gizi",
+        "Psikologi",
+        "Nyeri (Pain Clinic)",
+        "Layanan Unggulan (Santosa Brain Centre, Santosa Heart Center, Minimally Invasive Surgery, Skin Health & Beauty Centre)"
+      ],
+      "location": {
+        "latitude": -6.952283143612864,
+        "longitude": 107.58631003895393
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD): 24/7",
+        "Rawat Inap (400 beds + 100 intensive beds)",
+        "Ruang Perawatan Intensif Dewasa (ICU, HCU, CVCU, Intermediate)",
+        "Ruang Perawatan Intensif Anak (PICU, NICU, Perina)",
+        "Laboratorium: 24/7 (incl. Patologi Klinik, Bank Darah)",
+        "Radiologi: 24/7 (incl. CT-Scan 128 Slice, MRI 1.5T, USG 4D)",
+        "Radiologi Intervensi",
+        "Rehabilitasi Medik",
+        "Farmasi (Pharmacy): 24/7",
+        "Helipad",
+        "Ambulance"
+      ]
+    },
+    {
+      "name": "RSUD Kota Bandung",
+      "class": "Class B (Implicit based on Regional Public Hospital status)",
+      "specialties": [
+        "Gastroenterologi",
+        "Laboratorium Patologi Anatomi (Sitopatologi, Histopatologi, Pap Smear)",
+        "Laboratorium Patologi Klinik",
+        "Klinik THT-KL (ENT Clinic)"
+      ],
+      "location": {
+        "latitude": -6.915537936068018,
+        "longitude": 107.69874046778938
+      },
+      "facilities": [
+        "Pelayanan Gawat Darurat (IGD)",
+        "Pelayanan Rawat Jalan",
+        "Pelayanan Rawat Inap",
+        "Ambulans & Kereta Jenazah",
+        "Radiologi",
+        "X-Ray",
+        "MRI",
+        "Laboratorium (Patologi Klinik & Anatomi)",
+        "Bank Darah",
+        "Pelayanan Vaksinasi",
+        "Pendaftaran Online (PANGESTU)"
+      ]
+    },
+    {
+      "name": "RSU Pindad",
+      "class": "Class C Hospital",
+      "specialties": [
+        "Anestesi (Anesthesiology)",
+        "Anak (Pediatrics)",
+        "Bedah (General, Orthopedics, Oral, Neurosurgery, Pediatric)",
+        "Jantung (Cardiology)",
+        "Kebidanan dan Kandungan (OBGYN)",
+        "Kulit & Kelamin (Dermatology & Venereology)",
+        "Mata (Ophthalmology)",
+        "Paru (Pulmonology)",
+        "Penyakit Dalam (Internal Medicine)",
+        "Psikiatri (Psychiatry)",
+        "Poliklinik Gigi (Dental Clinic)",
+        "Poliklinik KIA & KB (Mother & Child Health / Family Planning)",
+        "Rehabilitasi Medik (Medical Rehabilitation)",
+        "Saraf (Neurology)",
+        "THT (ENT)",
+        "Urologi (Urology)",
+        "Konsultasi Psikologi & Gizi"
+      ],
+      "location": {
+        "latitude": -6.939872239621873,
+        "longitude": 107.64627674080371
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD): 24 Jam",
+        "Instalasi Rawat Inap (Inpatient Services)",
+        "Instalasi Intensive Care Unit (ICU): 10 rooms",
+        "Instalasi Kamar Operasi (Operating Rooms)",
+        "Unit Hemodialisa (Hemodialysis)",
+        "Laboratorium",
+        "Radiologi",
+        "Farmasi (Apotek / Pharmacy)",
+        "Ambulance",
+        "Medical Check-Up Services",
+        "Digital Registration (Mobile JKN, Website, WhatsApp)"
+      ]
+    },
+    {
+      "name": "RSAU Dr. M. Salamun",
+      "class": "Class B General Hospital (TNI AU owned)",
+      "specialties": [
+        "Pelayanan medik dasar / umum (General Practice)",
+        "Pelayanan medik gigi mulut (Dental/Oral)",
+        "Pelayanan KIA/KB (Mother & Child Health / Family Planning)",
+        "Infeksi Paru (Pulmonary Infection)",
+        "Penyakit dalam (Internal Medicine)",
+        "Kesehatan anak (Pediatrics)",
+        "Bedah (Surgery)",
+        "Obstetri dan ginekologi (Obstetrics & Gynecology)",
+        "Anestesi (Anesthesiology)",
+        "Layanan Unggulan (Phaeceomulsifikasi (cataract surgery), Hemodialisa, Cathlab)"
+      ],
+      "location": {
+        "latitude": -6.863557302274623,
+        "longitude": 107.60505353895333
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD): 24 jam",
+        "Rawat Jalan (Outpatient Services)",
+        "Rawat Inap (215 beds total)",
+        "ICU (Intensive Care Unit): 12 beds total",
+        "HCU (High Care Unit): 2 beds",
+        "NICU (Neonatal ICU): 4 beds total",
+        "PICU (Pediatric ICU): 2 beds",
+        "Hemodialisa (Hemodialysis)",
+        "Cathlab (Cardiac Catheterization)",
+        "Laboratorium (Implicit)",
+        "Radiologi",
+        "CT Scan",
+        "X-Ray",
+        "Ambulans"
+      ]
+    },
+    {
+      "name": "RS Advent Bandung",
+      "class": "Class B General Hospital (Social Organization owned)",
+      "specialties": [
+        "Akupuntur (Acupuncture)",
+        "Anak (Pediatrics)",
+        "Anestesi (Anesthesiology)",
+        "Bedah (Multiple Sub-specialties incl. Onkologi, Saraf, Vaskular)",
+        "Dokter Gigi Umum (General Dentistry)",
+        "Dokter Umum (General Practice)",
+        "Estetika (Aesthetics)",
+        "Gizi (Nutrition)",
+        "Jantung (Cardiology)",
+        "Jiwa / Psikiater (Psychiatry)",
+        "Kebidanan & Kandungan (Obstetrics & Gynecology)",
+        "Kedokteran Fisik Rehab-Medik (Medical Rehabilitation)",
+        "Kulit & Kelamin (Dermatology & Venereology)",
+        "Mata (Ophthalmology)",
+        "Paru (Pulmonology)",
+        "Patologi Anatomi & Klinik (Pathology)",
+        "Penyakit Dalam (Internal Medicine)",
+        "Psikolog (Psychology)",
+        "Radiologi (Radiology)",
+        "Saraf (Neurology)",
+        "THT-KL (ENT)"
+      ],
+      "location": {
+        "latitude": -6.891916823449524,
+        "longitude": 107.60330115429629
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD)",
+        "Ambulans",
+        "Rawat Inap (Inpatient Services): 254 beds",
+        "Instalasi Critical Care (ICU)",
+        "Kamar Bedah (Operating Room)",
+        "CATH LAB (Cardiac Catheterization)",
+        "Poli Jantung (Cardiology Clinic)",
+        "One Day Care (Chemotherapy, Transfusi)",
+        "Fisioterapi",
+        "Instalasi Hemodialisa (Hemodialysis)",
+        "Hyperbaric Oxygen Therapy (TOHB)",
+        "Akupunktur Medik (Medical Acupuncture)",
+        "Radiologi (CT SCAN 128 Slice, USG 4D)",
+        "Online Booking"
+      ]
+    },
+    {
+      "name": "RSKGM Kota Bandung",
+      "class": "Specialty Hospital (Dental and Oral Health)",
+      "specialties": [
+        "Pemeriksaan Gigi Umum (General Dental)",
+        "Klinik Pedodontia (Pediatric Dentistry)",
+        "Klinik Exodontia (Tooth Extraction)",
+        "Klinik Bedah Mulut (Oral Surgery)",
+        "Orthodonti (Orthodontics)",
+        "Endodonti (Endodontics)",
+        "Periodonti (Periodontics)",
+        "Konservasi Gigi (Conservative Dentistry / Fillings)",
+        "Prostodonti (Prosthodontics / Gigi Palsu)",
+        "Pembersihan Karang Gigi (Scaling)"
+      ],
+      "location": {
+        "latitude": -6.906052426223922,
+        "longitude": 107.6140624812823
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD): 24 jam",
+        "Rawat Inap (Inpatient Services)",
+        "Laboratorium (Implicit)",
+        "Radiologi (Implicit)",
+        "Pendaftaran Online (via \"siperigigi\" Mobile App)"
+      ]
+    },
+    {
+      "name": "RS Immanuel Bandung",
+      "class": "Class B General Hospital",
+      "specialties": [
+        "Klinik Anak (Pediatrics)",
+        "Klinik Paru Astma (Pulmonology/Asthma)",
+        "Klinik Kandungan (Obstetrics & Gynecology)",
+        "Klinik Pro Jiwa (Psychiatry)",
+        "Klinik Penyakit Dalam (Internal Medicine)",
+        "Klinik Jantung (Cardiology)",
+        "Klinik Gigi (Dental)",
+        "Klinik Radiologi (Radiology)",
+        "Klinik THT (ENT)",
+        "Klinik Bedah (Surgery)",
+        "Klinik Gizi Klinis (Clinical Nutrition)",
+        "Pain Clinic",
+        "Klinik Mata (Ophthalmology)",
+        "Klinik Kulit (Dermatology)",
+        "Klinik Psikologi",
+        "Klinik Reumatik (Rheumatology)",
+        "Klinik Geriatri (Geriatrics)",
+        "Klinik Urologi (Urology)",
+        "Klinik Saraf (Neurology)",
+        "Sub-Specialties (Gastroenterologi, Tropis Infeksi, Hemato Onkologi, Endokrin, Ginjal & Hipertensi, Kedokteran Okupasi, Aesthetic)"
+      ],
+      "location": {
+        "latitude": -6.935586640122509,
+        "longitude": 107.59666005429663
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD): 24 Jam",
+        "Rawat Inap (Inpatient Services)",
+        "Rawat Jalan (Outpatient Services)",
+        "Kamar Bedah (Operating Rooms)",
+        "ICU (Intensive Care Unit)",
+        "Intermediate Ward (IGD)",
+        "Laboratorium",
+        "Instalasi Farmasi (Pharmacy)",
+        "Radiologi",
+        "Haemodialisa (Hemodialysis)",
+        "Cath Lab (Kateterisasi Jantung)",
+        "Microscope Neuro Surgery",
+        "ESWL (Extracorporeal Shock Wave Lithotripsy)",
+        "Registrasi Online (Online Registration)"
+      ]
+    },
+    {
+      "name": "RSIA Melinda",
+      "class": "Specialty Hospital (Mother and Child)",
+      "specialties": [
+        "Poliklinik Obstetri dan Ginekologi (Obstetrics & Gynecology)",
+        "Kesehatan Anak (Pediatrics)",
+        "Gastroenterologi (Gastroenterology)",
+        "Kardiologi (Cardiology)",
+        "Neurologi (Neurology)",
+        "Onkologi (Oncology)"
+      ],
+      "location": {
+        "latitude": -6.906860469056542,
+        "longitude": 107.60326417692049
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD)",
+        "Layanan Rawat Jalan (Outpatient Services)",
+        "Rawat Inap (Inpatient Services)",
+        "Kamar Bayi (Nursery)",
+        "Laboratorium (Lab)",
+        "Radiologi",
+        "Apotek (Pharmacy)",
+        "Ambulans",
+        "Area Parkir"
+      ]
+    },
+    {
+      "name": "RS Al Islam Bandung",
+      "class": "Class B General Hospital",
+      "specialties": [
+        "Spesialis Anak (Pediatrics)",
+        "Spesialis Bedah Umum (General Surgery)",
+        "Spesialis Kebidanan dan Kandungan (Obstetrics & Gynecology)",
+        "Spesialis Penyakit Dalam (Internal Medicine)",
+        "Spesialis Saraf (Neurology)",
+        "Spesialis Kedokteran Jiwa (Psychiatry)",
+        "Spesialis Patologi Klinik (Clinical Pathology)",
+        "Spesialis Rehabilitasi Medik (Medical Rehabilitation)",
+        "Spesialis Ahli GIZI (Nutrition)",
+        "Dokter Gigi (Dentistry)",
+        "Dokter Umum (General Practice)"
+      ],
+      "location": {
+        "latitude": -6.9389327413010795,
+        "longitude": 107.6691651677896
+      },
+      "facilities": [
+        "Instalasi Gawat Darurat (IGD) (Implicit)",
+        "Rawat Jalan (Poliklinik Reguler designated for BPJS, and Poliklinik Raudhah)",
+        "Rawat Inap (Implicit)",
+        "Layanan Kemoterapi (Chemotherapy Services)",
+        "Laboratorium: 24 jam",
+        "Instalasi Radiologi",
+        "Radiologi Dental (Panoramic, Chepalometri)"
+      ]
+    }
+  ]
+}
