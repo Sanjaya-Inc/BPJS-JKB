@@ -1,0 +1,10 @@
+node_id,proc_code,name,avg_cost
+P001,89.52,EKG (Electrocardiogram),150000
+P002,88.7,Troponin Test (Lab),300000
+P003,37.22,PCI (Angiography/Stent),12000000
+P004,96.70,Mechanical Ventilation,2000000
+P005,96.04,Intubation,500000
+P006,93.96,Oxygen Therapy / Nebulizer,100000
+P007,47.0,Appendectomy,9000000
+P008,87.44,Chest X-Ray,200000
+P009,96.6,Nasogastric Tube (NGT),150000

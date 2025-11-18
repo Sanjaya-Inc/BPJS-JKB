@@ -1,0 +1,7 @@
+node_id,icd10_code,name,avg_cost,severity_level
+D001,I21.9,Acute Myocardial Infarction (Heart Attack),15000000,High
+D002,R07.9,Chest Pain Unspecified,500000,Low
+D003,J18.9,Pneumonia Unspecified,3500000,Medium
+D004,K35.80,Acute Appendicitis,12000000,Medium
+D005,R40.2,Coma (Unspecified),5000000,High
+D006,Z00.0,General Medical Exam,200000,Low

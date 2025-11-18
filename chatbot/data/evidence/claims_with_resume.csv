@@ -1,0 +1,7 @@
+claim_id,hospital_id,doctor_id,sep_no,icd10_primary,total_cost,medical_resume_json
+C100,HOS002,DOC001,SEP001,I21.9,15500000,"{""d_prim"": ""Acute MI"", ""proc"": [""EKG"", ""Troponin"", ""PCI Stent""], ""notes"": ""Chest pain 3 hours, ST-elevation on EKG. Performed at Santosa Heart Center.""}"
+C101,HOS001,DOC002,SEP002,K35.80,12000000,"{""d_prim"": ""Acute Appendicitis"", ""proc"": [""Appendectomy""], ""notes"": ""Pain RLQ, Fever, Leukocytosis. Referred to RSHS due to comorbidity.""}"
+C102,HOS004,DOC004,SEP003,J18.9,3500000,"{""d_prim"": ""Pneumonia"", ""proc"": [""Chest XRay"", ""Nebulizer""], ""notes"": ""Cough, fever, infiltrate on XRay. Treated at Pindad Inpatient.""}"
+C103,HOS003,DOC003,SEP004,I21.9,15000000,"{""d_prim"": ""Nyeri Dada"", ""proc"": [""Pemberian Oksigen"", ""Observasi""], ""notes"": ""Pasien mengeluh pusing dan berdebar. Tidak ada EKG. (Claimed at RSUD Bandung)""}"
+C104,HOS003,DOC003,SEP005,R40.2,5000000,"{""d_prim"": ""Penurunan Kesadaran"", ""proc"": [""Infus""], ""notes"": ""GCS: E:4, V:9, M:6. Kondisi umum lemah.""}"
+C105,HOS003,DOC003,SEP006,J18.9,16000000,"{""d_prim"": ""Pneumonia Berat"", ""proc"": [""Nebulizer"", ""Rujuk ke RSUP""], ""notes"": ""Stabilisasi di RSUD lalu rujuk ke RSHS. Pasang NGT.""}"

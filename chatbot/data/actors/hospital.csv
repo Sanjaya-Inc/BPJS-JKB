@@ -1,0 +1,11 @@
+hospital_id,name,class_type,latitude,longitude,specialties_json,facilities_json
+HOS001,RSUP Dr. Hasan Sadikin (RSHS),Class A (National Referral),-6.898169,107.598406,"[""Anestesi"", ""Bedah"", ""Internal Medicine"", ""Cardiology"", ""Oncology"", ""Radiology""]","[""IGD 24/7"", ""929 Beds"", ""NICU"", ""ICU"", ""Advanced Radiology"", ""Online Bed Monitoring""]"
+HOS002,Santosa Hospital Bandung Central,Class A (Private),-6.952283,107.586310,"[""Santosa Brain Centre"", ""Santosa Heart Center"", ""Orthopedics"", ""Neurosurgery"", ""Oncology""]","[""CT-Scan 128 Slice"", ""MRI 1.5T"", ""Helipad"", ""ICU/HCU/CVCU"", ""Bank Darah""]"
+HOS003,RSUD Kota Bandung,Class B,-6.915537,107.698740,"[""Gastroenterologi"", ""Pathology"", ""ENT"", ""Internal Medicine""]","[""MRI"", ""X-Ray"", ""Bank Darah"", ""Pendaftaran Online""]"
+HOS004,RSU Pindad,Class C,-6.939872,107.646276,"[""General Surgery"", ""Pediatrics"", ""Neurology"", ""Dentistry""]","[""ICU 10 Rooms"", ""Hemodialysis"", ""Operating Rooms"", ""Mobile JKN""]"
+HOS005,RSAU Dr. M. Salamun,Class B (Military),-6.863557,107.605053,"[""Pulmonary Infection"", ""Cataract Surgery"", ""Hemodialysis"", ""Cathlab""]","[""Cathlab"", ""CT Scan"", ""Hemodialysis"", ""215 Beds""]"
+HOS006,RS Advent Bandung,Class B,-6.891916,107.603301,"[""Cardiology"", ""Oncology"", ""Neurology"", ""Vascular Surgery""]","[""Cath Lab"", ""Hyperbaric Oxygen"", ""Hemodialysis"", ""128 Slice CT Scan""]"
+HOS007,RSKGM Kota Bandung,Specialty (Dental),-6.906052,107.614062,"[""Oral Surgery"", ""Orthodontics"", ""Periodontics"", ""Pediatric Dentistry""]","[""Dental Radiology"", ""Inpatient Services"", ""Siperigigi App""]"
+HOS008,RS Immanuel Bandung,Class B,-6.935586,107.596660,"[""Microscope Neuro Surgery"", ""Geriatrics"", ""Renal & Hypertension"", ""Psychiatry""]","[""Cath Lab"", ""ESWL"", ""Hemodialysis"", ""Microscope Neuro Surgery""]"
+HOS009,RSIA Melinda,Specialty (Mother & Child),-6.906860,107.603264,"[""Obstetrics"", ""Gynecology"", ""Pediatrics"", ""Nursery""]","[""Nursery"", ""Advanced USG"", ""Pediatric Ward""]"
+HOS010,RS Al Islam Bandung,Class B,-6.938932,107.669165,"[""Chemotherapy"", ""Rehabilitation"", ""Hemato Oncology"", ""Pediatrics""]","[""Chemotherapy Center"", ""Panoramic Dental X-Ray"", ""Poliklinik Raudhah""]"

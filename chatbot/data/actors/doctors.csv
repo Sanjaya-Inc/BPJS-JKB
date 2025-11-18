@@ -1,0 +1,5 @@
+doctor_id,primary_hospital_id,name,specialization
+DOC001,HOS002,Dr. Budi Hartono,Cardiologist
+DOC002,HOS001,Dr. Citra Dewi,General Surgeon
+DOC003,HOS003,Dr. Rudy Halim,Internal Medicine
+DOC004,HOS004,Dr. Sinta Bella,GP
