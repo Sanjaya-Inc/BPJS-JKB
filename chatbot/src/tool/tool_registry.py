@@ -1,12 +1,14 @@
 from langchain_core.utils.function_calling import convert_to_openai_function
-from src.tool.get_hospital_data_tool import GetHospitalDataTool
+from src.tool.execute_chyper import ExecuteCypherTool
+from src.tool.schema_linking import SchemaLinkingTool
 
 class ToolRegistry:
     def __init__(self):
         """Initialize and register tool instances."""
 
         self._tools = {
-            "get_hospital_data_tool": GetHospitalDataTool(),
+            "schema_linking": SchemaLinkingTool(),
+            "execute_cypher": ExecuteCypherTool(),
         }
 
         self._functions = [
