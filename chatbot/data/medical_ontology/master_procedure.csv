@@ -1,10 +1,26 @@
 node_id,proc_code,name,avg_cost
-P001,89.52,EKG (Electrocardiogram),150000
-P002,88.7,Troponin Test (Lab),300000
-P003,37.22,PCI (Angiography/Stent),12000000
-P004,96.70,Mechanical Ventilation,2000000
-P005,96.04,Intubation,500000
-P006,93.96,Oxygen Therapy / Nebulizer,100000
-P007,47.0,Appendectomy,9000000
-P008,87.44,Chest X-Ray,200000
-P009,96.6,Nasogastric Tube (NGT),150000
+P001,89.52,"EKG (Electrocardiogram)",175000
+P002,88.70,"Troponin Test (Lab)",450000
+P003,37.22,"PCI (Angiography/Stent)",55000000
+P004,96.70,"Mechanical Ventilation",3500000
+P005,96.04,"Intubation",1200000
+P006,47.0,"Appendectomy (Surgery)",25000000
+P007,74.0,"Caesarean Section (Surgery)",22000000
+P008,45.13,"EGD (Gastroscopy)",4500000
+P009,39.95,"Hemodialysis (Cuci Darah)",1600000
+P010,90.50,"Complete Blood Count (CBC)",150000
+P011,99.55,"Vaccination / Injection",250000
+P012,88.91,"MRI Head (Brain Scan)",5500000
+P013,87.03,"CT Scan Head",3200000
+P014,13.41,"Phacoemulsification (Cataract Surgery)",14000000
+P015,51.23,"Laparoscopic Cholecystectomy (Gallstone)",38000000
+P016,53.05,"Hernia Repair Surgery",18000000
+P017,87.44,"Chest X-Ray",250000
+P018,79.35,"ORIF (Bone Fracture Surgery)",35000000
+P019,91.32,"Urine Culture",350000
+P020,93.94,"Nebulizer Therapy",150000
+P021,99.25,"Chemotherapy Injection/Infusion",5000000
+P022,85.41,"Mastectomy (Breast Surgery)",28000000
+P023,45.23,"Colonoscopy",5500000
+P024,99.18,"IV Fluid Infusion (Infus)",150000
+P025,90.59,"Blood Glucose Test",100000

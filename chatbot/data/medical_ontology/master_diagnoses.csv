@@ -1,7 +1,26 @@
 node_id,icd10_code,name,avg_cost,severity_level
-D001,I21.9,Acute Myocardial Infarction (Heart Attack),15000000,High
-D002,R07.9,Chest Pain Unspecified,500000,Low
-D003,J18.9,Pneumonia Unspecified,3500000,Medium
-D004,K35.80,Acute Appendicitis,12000000,Medium
-D005,R40.2,Coma (Unspecified),5000000,High
-D006,Z00.0,General Medical Exam,200000,Low
+D001,I21.9,"Acute Myocardial Infarction (Heart Attack)",65000000,High
+D002,R07.9,"Chest Pain Unspecified",1500000,Low
+D003,J18.9,"Pneumonia Unspecified",8500000,Medium
+D004,K35.80,"Acute Appendicitis",32000000,Medium
+D005,R40.2,"Coma (Unspecified)",15000000,High
+D006,Z00.0,"General Medical Exam",750000,Low
+D007,A90,"Dengue Fever (DBD)",9000000,Medium
+D008,A01.0,"Typhoid Fever",6500000,Medium
+D009,K29.7,"Acute Gastritis",2800000,Low
+D010,O82,"Caesarean Section Delivery",35000000,Medium
+D011,E11.9,"Type 2 Diabetes Mellitus",5500000,Medium
+D012,N18.5,"Chronic Kidney Disease (Stage 5)",1500000,High
+D013,I63.9,"Cerebral Infarction (Stroke)",55000000,High
+D014,H25.9,"Senile Cataract",16000000,Low
+D015,K80.2,"Calculus of Gallbladder (Gallstones)",45000000,Medium
+D016,K40.9,"Inguinal Hernia",25000000,Medium
+D017,A15.0,"Pulmonary Tuberculosis (TB)",7000000,Medium
+D018,S72.9,"Fracture of Femur (Broken Thigh Bone)",42000000,High
+D019,N39.0,"Urinary Tract Infection (UTI)",2500000,Low
+D020,I10,"Essential Hypertension",1200000,Low
+D021,G43.9,"Migraine",1800000,Low
+D022,J45.9,"Asthma Attack",3500000,Medium
+D023,A09,"Gastroenteritis (Diarrhea)",3000000,Low
+D024,C50.9,"Breast Cancer",35000000,High
+D025,U07.1,"COVID-19 Infection",12000000,Medium

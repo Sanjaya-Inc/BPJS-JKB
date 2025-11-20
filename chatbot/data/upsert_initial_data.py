@@ -3,18 +3,17 @@ import json
 from neo4j import GraphDatabase
 
 # ---------------- CONFIGURATION ----------------
-# Update these with your Neo4j credentials
-URI = "neo4j://localhost:7687"  # Default Neo4j Bolt port
+URI = "neo4j://localhost:7687"
 AUTH = ("neo4j", "12345678")
 
-# File Paths (Ensure these match your saved CSV filenames)
+# File Paths (Ensure these point to your updated CSV files)
 FILES = {
     "hospitals": "chatbot/data/actors/hospital.csv",
     "doctors": "chatbot/data/actors/doctors.csv", 
     "diagnoses": "chatbot/data/medical_ontology/master_diagnoses.csv",
     "procedures": "chatbot/data/medical_ontology/master_procedure.csv",
     "rules": "chatbot/data/medical_ontology/knowledge_rules.csv",
-    "claims": "chatbot/data/evidence/claims_with_resume.csv"
+    "claims": "chatbot/data/evidence/claims_with_resume.csv" # Renamed to claims.csv based on recent steps
 }
 
 class BPJSGraphLoader:
@@ -25,13 +24,11 @@ class BPJSGraphLoader:
         self.driver.close()
 
     def clear_database(self):
-        """Wipes the database clean before loading (Optional)"""
         with self.driver.session() as session:
             session.run("MATCH (n) DETACH DELETE n")
             print("🧹 Database cleared.")
 
     def create_constraints(self):
-        """Creates unique constraints to prevent duplicates and speed up queries"""
         queries = [
             "CREATE CONSTRAINT IF NOT EXISTS FOR (h:Hospital) REQUIRE h.id IS UNIQUE",
             "CREATE CONSTRAINT IF NOT EXISTS FOR (d:Doctor) REQUIRE d.id IS UNIQUE",
@@ -75,8 +72,8 @@ class BPJSGraphLoader:
         df_rules = pd.read_csv(FILES["rules"])
         with self.driver.session() as session:
             for _, row in df_rules.iterrows():
-                # Dynamic relationship creation using apoc or simple string formatting (safe here as inputs are controlled)
                 rel_type = row['relationship']
+                # Note: Using F-string for rel_type is safe here because we control the CSV content.
                 query = f"""
                     MATCH (d:Diagnosis {{code: $d_code}})
                     MATCH (p:Procedure {{code: $p_code}})
@@ -104,22 +101,26 @@ class BPJSGraphLoader:
                    lat=row['latitude'], long=row['longitude'])
                 
                 # Parse Specialties JSON -> Create Edges
-                specialties = json.loads(row['specialties_json'])
-                for spec in specialties:
-                    session.run("""
-                        MATCH (h:Hospital {id: $id})
-                        MERGE (s:Specialty {name: $spec})
-                        MERGE (h)-[:HAS_SPECIALTY]->(s)
-                    """, id=row['hospital_id'], spec=spec)
+                try:
+                    specialties = json.loads(row['specialties_json'])
+                    for spec in specialties:
+                        session.run("""
+                            MATCH (h:Hospital {id: $id})
+                            MERGE (s:Specialty {name: $spec})
+                            MERGE (h)-[:HAS_SPECIALTY]->(s)
+                        """, id=row['hospital_id'], spec=spec)
+                except: pass # Handle empty or malformed json
 
                 # Parse Facilities JSON -> Create Edges
-                facilities = json.loads(row['facilities_json'])
-                for fac in facilities:
-                    session.run("""
-                        MATCH (h:Hospital {id: $id})
-                        MERGE (f:Facility {name: $fac})
-                        MERGE (h)-[:HAS_FACILITY]->(f)
-                    """, id=row['hospital_id'], fac=fac)
+                try:
+                    facilities = json.loads(row['facilities_json'])
+                    for fac in facilities:
+                        session.run("""
+                            MATCH (h:Hospital {id: $id})
+                            MERGE (f:Facility {name: $fac})
+                            MERGE (h)-[:HAS_FACILITY]->(f)
+                        """, id=row['hospital_id'], fac=fac)
+                except: pass
 
         # 2. Load Doctors
         df_doc = pd.read_csv(FILES["doctors"])
@@ -141,20 +142,20 @@ class BPJSGraphLoader:
         print(f"   - Loaded {len(df_hos)} Hospitals and {len(df_doc)} Doctors.")
 
     def load_claims_and_resume(self):
-        """Loads Claims and parses the complex Clinical Resume JSON"""
+        """Loads Claims and parses the NEW Nested Clinical Resume JSON"""
         print("📄 Loading Claims and Clinical Evidence...")
         
         df_claims = pd.read_csv(FILES["claims"])
         
         with self.driver.session() as session:
             for _, row in df_claims.iterrows():
-                # 1. Create Basic Claim Node
+                # 1. Create Basic Claim Node with Label (Status)
                 session.run("""
-                    CREATE (c:Claim {id: $cid})
-                    SET c.sep_no = $sep,
-                        c.total_cost = toFloat($cost),
-                        c.date = date()  // Assuming current date for demo
-                """, cid=row['claim_id'], sep=row['sep_no'], cost=row['total_cost'])
+                    MERGE (c:Claim {id: $cid})
+                    SET c.total_cost = toFloat($cost),
+                        c.status = $label,
+                        c.date = date() 
+                """, cid=row['claim_id'], cost=row['total_cost'], label=row['label'])
 
                 # 2. Link Actors (Hospital, Doctor, ICD-10)
                 session.run("""
@@ -166,40 +167,58 @@ class BPJSGraphLoader:
                     MERGE (c)-[:SUBMITTED_BY]->(d)
                     MERGE (c)-[:CODED_AS]->(diag)
                 """, cid=row['claim_id'], hid=row['hospital_id'], 
-                   did=row['doctor_id'], code=row['icd10_primary'])
+                   did=row['doctor_id'], code=row['diagnosis'])
 
-                # 3. Parse Clinical Resume JSON (The "Evidence")
-                resume_json = json.loads(row['medical_resume_json'])
-                
-                # Create Clinical Note Node
-                session.run("""
-                    MATCH (c:Claim {id: $cid})
-                    CREATE (n:ClinicalNote)
-                    SET n.text_raw = $notes,
-                        n.primary_diagnosis_text = $d_prim
-                    CREATE (c)-[:HAS_CLINICAL_NOTE]->(n)
-                """, cid=row['claim_id'], notes=resume_json.get('notes', ''), 
-                   d_prim=resume_json.get('d_prim', ''))
+                # 3. Parse NEW Nested Clinical Resume JSON
+                try:
+                    resume_root = json.loads(row['medical_resume_json'])
+                    
+                    # Handle potential nesting: { "Medical_Resume": { ... } }
+                    if "Medical_Resume" in resume_root:
+                        data = resume_root["Medical_Resume"]
+                    else:
+                        data = resume_root
 
-                # Extract Procedures from JSON list and link to Ontology
-                # NOTE: In a real app, this would use Vector Search/LLM. 
-                # Here we do simple exact/partial matching for the demo.
-                procedures_text = resume_json.get('proc', [])
-                for proc_txt in procedures_text:
-                    # Try to find a matching Procedure in our Ontology
+                    # Extract Fields
+                    patient_name = data.get("Patient_Name", "Unknown")
+                    primary_diag = data.get("Primary_Diagnosis", "")
+                    notes_text = data.get("Secondary_Diagnosis", "") # Using Sec Diag as "Notes/Findings"
+                    
+                    # Combine Primary and Secondary Procedures for evidence linking
+                    proc_list = data.get("Primary_Procedure", []) + data.get("Secondary_Procedures", [])
+
+                    # Create Clinical Note Node
                     session.run("""
-                        MATCH (c:Claim {id: $cid})-[:HAS_CLINICAL_NOTE]->(n:ClinicalNote)
-                        
-                        // 1. Create an 'MentionedEntity' for the raw text
-                        CREATE (e:MentionedEntity {text: $p_text, type: 'Procedure'})
-                        CREATE (n)-[:MENTIONS]->(e)
-                        
-                        // 2. Attempt to link to standardized Procedure (Simple fuzzy match logic)
-                        WITH e
-                        MATCH (p:Procedure)
-                        WHERE toLower(e.text) CONTAINS toLower(p.name) OR toLower(p.name) CONTAINS toLower(e.text)
-                        MERGE (e)-[:MAPS_TO]->(p)
-                    """, cid=row['claim_id'], p_text=proc_txt)
+                        MATCH (c:Claim {id: $cid})
+                        CREATE (n:ClinicalNote)
+                        SET n.patient_name = $pat_name,
+                            n.primary_diagnosis_text = $prim_diag,
+                            n.text_raw = $notes
+                        CREATE (c)-[:HAS_CLINICAL_NOTE]->(n)
+                    """, cid=row['claim_id'], pat_name=patient_name, 
+                         prim_diag=primary_diag, notes=notes_text)
+
+                    # 4. Link Procedure Text to Ontology
+                    # We iterate through the list of procedure strings found in the JSON
+                    for proc_str in proc_list:
+                        session.run("""
+                            MATCH (c:Claim {id: $cid})-[:HAS_CLINICAL_NOTE]->(n:ClinicalNote)
+                            
+                            // Create Entity node for the specific text found in the resume
+                            CREATE (e:MentionedEntity {text: $p_text, type: 'Procedure'})
+                            CREATE (n)-[:MENTIONS]->(e)
+                            
+                            // Fuzzy Match to Standardized Procedure
+                            // (Finds a Procedure where the name is inside the text, or text inside the name)
+                            WITH e
+                            MATCH (p:Procedure)
+                            WHERE toLower(e.text) CONTAINS toLower(p.name) 
+                               OR toLower(p.name) CONTAINS toLower(e.text)
+                            MERGE (e)-[:MAPS_TO]->(p)
+                        """, cid=row['claim_id'], p_text=proc_str)
+
+                except Exception as e:
+                    print(f"⚠️ Error parsing JSON for Claim {row['claim_id']}: {e}")
 
         print(f"   - Loaded {len(df_claims)} Claims with Evidence.")
 
@@ -209,7 +228,7 @@ if __name__ == "__main__":
         loader = BPJSGraphLoader(URI, AUTH)
         
         loader.create_constraints()
-        loader.clear_database() # Uncomment to wipe DB before starting
+        loader.clear_database() 
         
         loader.load_medical_ontology()
         loader.load_infrastructure()
