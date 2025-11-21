@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Any
 
 class Location(BaseModel):
     latitude: float
@@ -36,3 +36,12 @@ class Claim(BaseModel):
 
 class ClaimResponse(BaseModel):
     data: List[Claim]
+
+# Chatbot schemas
+class QuestionRequest(BaseModel):
+    question: str = Field(..., description="User's question input", min_length=1)
+
+class ChatbotResponse(BaseModel):
+    answer: str = Field(..., description="Processed answer from the chatbot")
+    status: str = Field(default="success", description="Response status")
+    metadata: Optional[dict] = Field(default=None, description="Additional metadata from processing")

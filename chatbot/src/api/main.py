@@ -7,7 +7,8 @@ from typing import Optional, AsyncGenerator
 # Imports
 from src.database import db
 from .repository import HealthcareRepository
-from .schemas import HospitalResponse, DoctorResponse, ClaimResponse
+from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, QuestionRequest, ChatbotResponse
+from .chatbot_service import ChatbotService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ app = FastAPI(
     description="API for accessing hospitals, doctors, and claims data from Neo4j GraphDB",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc",
+    redoc_url="/api-docs",
     lifespan=lifespan 
 )
 
@@ -57,6 +58,18 @@ def get_repository():
         yield HealthcareRepository(session)
     finally:
         session.close()
+
+# Global chatbot service instance
+_chatbot_service = None
+
+def get_chatbot_service():
+    """
+    Creates or returns the singleton chatbot service instance.
+    """
+    global _chatbot_service
+    if _chatbot_service is None:
+        _chatbot_service = ChatbotService()
+    return _chatbot_service
 
 # --- Routes ---
 
@@ -91,3 +104,18 @@ def get_claims(
 ):
     results = repo.get_claims(status, hospital_id, doctor_id)
     return {"data": results}
+
+@app.post("/chatbot/ask", response_model=ChatbotResponse, tags=["Chatbot"])
+def ask_chatbot(
+    request: QuestionRequest,
+    chatbot_service: ChatbotService = Depends(get_chatbot_service)
+):
+    """
+    Process a user question through the chatbot agent workflow.
+    
+    This endpoint replicates the functionality from the dani-chatbot.ipynb notebook,
+    using the same agent-based approach with entity extraction, RAG search, 
+    context building, schema linking, and Cypher query execution.
+    """
+    result = chatbot_service.process_question(request.question)
+    return ChatbotResponse(**result)
