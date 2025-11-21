@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.healthkathon.bpjs.jkb.presentation.screen.Splash
 import io.healthkathon.bpjs.jkb.presentation.screen.SplashScreen
+import io.healthkathon.jkb.chatbot.presentation.Chatbot
+import io.healthkathon.jkb.chatbot.presentation.ChatbotScreen
 import io.healthkathon.jkb.core.presentation.component.rememberSnackBarHostState
 import io.healthkathon.jkb.core.presentation.theme.LocalNavController
 import io.healthkathon.jkb.core.presentation.theme.LocalSnackBarHost
@@ -32,6 +34,7 @@ fun JkbNavHost() {
             composable<Onboarding> { OnboardingScreen() }
             composable<Menu> { MenuScreen() }
             composable<FraudDetection> { FraudDetectionScreen() }
+            composable<Chatbot> { ChatbotScreen() }
         }
     }
 }

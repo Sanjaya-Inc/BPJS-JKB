@@ -1,6 +1,7 @@
 package io.healthkathon.bpjs.jkb.presentation.utils
 
 import io.healthkathon.bpjs.jkb.di.AppModule
+import io.healthkathon.jkb.chatbot.di.ChatBotModule
 import io.healthkathon.jkb.core.di.CoreModules
 import io.healthkathon.jkb.core.presentation.utils.PlatformContext
 import io.healthkathon.jkb.frauddetection.di.FraudDetectionModule
@@ -20,5 +21,6 @@ internal fun getKoinModules(context: PlatformContext?): List<Module> = listOf(
     AppModule.module,
     OnbaordingModule.module,
     MenuModule.module,
-    FraudDetectionModule.module
+    FraudDetectionModule.module,
+    ChatBotModule.module
 )

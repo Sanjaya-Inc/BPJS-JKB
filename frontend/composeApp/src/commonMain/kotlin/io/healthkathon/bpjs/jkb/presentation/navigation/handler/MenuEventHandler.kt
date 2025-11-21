@@ -6,6 +6,7 @@ package io.healthkathon.bpjs.jkb.presentation.navigation.handler
 
 import androidx.navigation.NavController
 import io.healthkathon.bpjs.jkb.presentation.navigation.NavigationEventHandler
+import io.healthkathon.jkb.chatbot.presentation.Chatbot
 import io.healthkathon.jkb.core.presentation.navigation.NavigationIntent
 import io.healthkathon.jkb.frauddetection.presentation.FraudDetection
 import io.healthkathon.jkb.menu.presentation.MenuIntent
@@ -23,6 +24,10 @@ class MenuEventHandler : NavigationEventHandler() {
             when (event.menuItem.id) {
                 "fraud-detection" -> navController.navigate(
                     FraudDetection
+                )
+
+                else -> navController.navigate(
+                    Chatbot
                 )
             }
         }
