@@ -4,6 +4,7 @@ from langchain_core.tools import BaseTool
 from langchain_community.vectorstores import Neo4jVector
 from langchain_openai import OpenAIEmbeddings
 from neo4j import GraphDatabase
+from src.config import NEO4J_URI, NEO4J_AUTH
 
 # --- CHANGE 1: Update Input to accept Cost ---
 class VerifyClaimInput(BaseModel):
@@ -25,8 +26,8 @@ class VerifyClaimRulesTool(BaseTool):
     """
     args_schema: Type[BaseModel] = VerifyClaimInput
     
-    URI: str = "neo4j://localhost:7687"
-    AUTH: tuple = ("neo4j", "12345678")
+    URI: str = NEO4J_URI
+    AUTH: tuple = NEO4J_AUTH
 
     def _run(self, diagnosis_query: str, claimed_cost: Optional[float] = None) -> str:
         driver = None

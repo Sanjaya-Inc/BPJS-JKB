@@ -4,10 +4,11 @@ from langchain.tools import tool
 from pydantic import BaseModel, Field
 from typing import Type, List, Any
 from langchain_core.tools import BaseTool
+from src.config import NEO4J_URI, NEO4J_AUTH
 
-# 1. Neo4j Connection Details
-URI = "neo4j://localhost:7687"
-AUTH = ("neo4j", "12345678")
+# 1. Neo4j Connection Details (imported from config)
+URI = NEO4J_URI
+AUTH = NEO4J_AUTH
 
 # 2. Define the Input Schema
 class CypherInput(BaseModel):

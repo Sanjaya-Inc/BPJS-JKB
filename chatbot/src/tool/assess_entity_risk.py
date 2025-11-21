@@ -4,6 +4,7 @@ from langchain_core.tools import BaseTool
 from langchain_community.vectorstores import Neo4jVector
 from langchain_openai import OpenAIEmbeddings
 from neo4j import GraphDatabase
+from src.config import NEO4J_URI, NEO4J_AUTH
 
 # --- 1. Input Schema ---
 class EntityRiskInput(BaseModel):
@@ -25,9 +26,9 @@ class AssessEntityRiskTool(BaseTool):
     """
     args_schema: Type[BaseModel] = EntityRiskInput
     
-    # Database Config (Ideally load from env)
-    URI: str = "neo4j://localhost:7687"
-    AUTH: tuple = ("neo4j", "12345678")
+    # Database Config (imported from config)
+    URI: str = NEO4J_URI
+    AUTH: tuple = NEO4J_AUTH
 
     def _resolve_name_via_vector(self, entity_type: str, query: str) -> str:
         """Uses Vector Search to find the exact node name (e.g., 'Budi' -> 'Dr. Budi Hartono')."""

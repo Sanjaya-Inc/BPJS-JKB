@@ -1,19 +1,18 @@
 import pandas as pd
 import json
 from neo4j import GraphDatabase
+from src.config import NEO4J_URI, NEO4J_AUTH
 
-# ---------------- CONFIGURATION ----------------
-URI = "neo4j://localhost:7687"
-AUTH = ("neo4j", "12345678")
+URI = NEO4J_URI
+AUTH = NEO4J_AUTH
 
-# File Paths (Ensure these point to your updated CSV files)
 FILES = {
     "hospitals": "chatbot/data/actors/hospital.csv",
     "doctors": "chatbot/data/actors/doctors.csv", 
     "diagnoses": "chatbot/data/medical_ontology/master_diagnoses.csv",
     "procedures": "chatbot/data/medical_ontology/master_procedure.csv",
     "rules": "chatbot/data/medical_ontology/knowledge_rules.csv",
-    "claims": "chatbot/data/evidence/claims_with_resume.csv" # Renamed to claims.csv based on recent steps
+    "claims": "chatbot/data/evidence/claims_with_resume.csv" 
 }
 
 class BPJSGraphLoader:
