@@ -10,6 +10,8 @@ import io.healthkathon.bpjs.jkb.presentation.screen.SplashScreen
 import io.healthkathon.jkb.core.presentation.component.rememberSnackBarHostState
 import io.healthkathon.jkb.core.presentation.theme.LocalNavController
 import io.healthkathon.jkb.core.presentation.theme.LocalSnackBarHost
+import io.healthkathon.jkb.onboarding.presentation.Onboarding
+import io.healthkathon.jkb.onboarding.presentation.OnboardingScreen
 
 @Composable
 fun JkbNavHost() {
@@ -23,6 +25,7 @@ fun JkbNavHost() {
     ) {
         NavHost(navController = navController, startDestination = Splash) {
             composable<Splash> { SplashScreen() }
+            composable<Onboarding> { OnboardingScreen() }
         }
     }
 }

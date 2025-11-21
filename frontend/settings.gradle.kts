@@ -40,3 +40,4 @@ plugins {
 
 include(":composeApp")
 include(":core")
+include(":features:onboarding")

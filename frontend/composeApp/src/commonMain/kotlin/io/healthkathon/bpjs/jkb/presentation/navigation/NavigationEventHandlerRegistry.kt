@@ -25,6 +25,7 @@ fun NavigationEventBusHandler(
 ) {
     LaunchedEffect(Unit) {
         eventBus.collect {
+            println("ketai: $it")
             navigationEventHandlerRegistry.handle(navController, it)
         }
     }
