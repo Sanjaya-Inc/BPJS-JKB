@@ -4,10 +4,14 @@ import bpjs_jkb.core.generated.resources.Res
 import bpjs_jkb.core.generated.resources.cta_continue
 import bpjs_jkb.core.generated.resources.cta_skip
 import bpjs_jkb.core.generated.resources.ic_arrow_forward
+import bpjs_jkb.core.generated.resources.ic_bpjs_jkb
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 
 object CoreResources {
+    val appLogo: DrawableResource
+        get() = Res.drawable.ic_bpjs_jkb
+
     val ctaContinue: StringResource
         get() = Res.string.cta_continue
 

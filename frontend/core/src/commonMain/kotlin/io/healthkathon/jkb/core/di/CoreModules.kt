@@ -10,7 +10,7 @@ import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
-@ComponentScan("id.healthkathon.jkb.core")
+@ComponentScan("io.healthkathon.jkb.core")
 @Module
 object CoreModules {
     @Single
