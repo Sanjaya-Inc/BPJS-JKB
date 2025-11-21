@@ -1,0 +1,221 @@
+package io.healthkathon.jkb.frauddetection.presentation
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import io.healthkathon.jkb.core.presentation.component.AdaptiveAnimatedLayout
+import io.healthkathon.jkb.core.presentation.preview.JKBPreview
+import io.healthkathon.jkb.core.presentation.theme.JKBTheme
+import io.healthkathon.jkb.frauddetection.presentation.components.ClaimIdDetectionScreen
+import io.healthkathon.jkb.frauddetection.presentation.components.NewClaimDetectionScreen
+import io.healthkathon.jkb.frauddetection.presentation.components.ActorDetectionScreen
+import kotlinx.serialization.Serializable
+import org.koin.compose.viewmodel.koinViewModel
+import org.orbitmvi.orbit.compose.collectAsState
+
+@Composable
+fun FraudDetectionScreen(
+    modifier: Modifier = Modifier,
+    viewModel: FraudDetectionViewModel = koinViewModel(),
+) {
+    val state = viewModel.collectAsState().value
+    FraudDetectionScreenContent(
+        uiState = state,
+        onNavigateToTab = { viewModel.sendIntent(FraudDetectionIntent.NavigateToTab(it)) },
+        onClaimIdSubmit = { viewModel.sendIntent(FraudDetectionIntent.SubmitClaimId(it)) },
+        onNewClaimSubmit = { hospital, doctor, diagnosis, cost, action ->
+            viewModel.sendIntent(
+                FraudDetectionIntent.SubmitNewClaim(hospital, doctor, diagnosis, cost, action)
+            )
+        },
+        onActorSubmit = { actorType, actorId ->
+            viewModel.sendIntent(FraudDetectionIntent.SubmitActorAnalysis(actorType, actorId))
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun FraudDetectionScreenContent(
+    uiState: FraudDetectionUiState,
+    onNavigateToTab: (FraudDetectionTab) -> Unit,
+    onClaimIdSubmit: (String) -> Unit,
+    onNewClaimSubmit: (String, String, String, String, String) -> Unit,
+    onActorSubmit: (ActorType, String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Scaffold(modifier = modifier) { paddingValues ->
+        AdaptiveAnimatedLayout(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            compactContent = {
+                CompactFraudDetectionLayout(
+                    uiState = uiState,
+                    onNavigateToTab = onNavigateToTab,
+                    onClaimIdSubmit = onClaimIdSubmit,
+                    onNewClaimSubmit = onNewClaimSubmit,
+                    onActorSubmit = onActorSubmit
+                )
+            },
+            expandedContent = {
+                ExpandedFraudDetectionLayout(
+                    uiState = uiState,
+                    onNavigateToTab = onNavigateToTab,
+                    onClaimIdSubmit = onClaimIdSubmit,
+                    onNewClaimSubmit = onNewClaimSubmit,
+                    onActorSubmit = onActorSubmit
+                )
+            }
+        )
+    }
+}
+
+@Composable
+private fun CompactFraudDetectionLayout(
+    uiState: FraudDetectionUiState,
+    onNavigateToTab: (FraudDetectionTab) -> Unit,
+    onClaimIdSubmit: (String) -> Unit,
+    onNewClaimSubmit: (String, String, String, String, String) -> Unit,
+    onActorSubmit: (ActorType, String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Box(modifier = Modifier.weight(1f)) {
+            when (uiState.currentTab) {
+                FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
+                    isLoading = uiState.isLoading,
+                    result = uiState.result,
+                    onSubmit = onClaimIdSubmit
+                )
+                FraudDetectionTab.NEW_CLAIM -> NewClaimDetectionScreen(
+                    isLoading = uiState.isLoading,
+                    result = uiState.result,
+                    onSubmit = onNewClaimSubmit
+                )
+                FraudDetectionTab.ACTOR -> ActorDetectionScreen(
+                    isLoading = uiState.isLoading,
+                    result = uiState.result,
+                    onSubmit = onActorSubmit
+                )
+            }
+        }
+
+        NavigationBar {
+            FraudDetectionTab.entries.forEach { tab ->
+                NavigationBarItem(
+                    selected = uiState.currentTab == tab,
+                    onClick = { onNavigateToTab(tab) },
+                    icon = {
+                        Text(
+                            text = tab.icon,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = tab.title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpandedFraudDetectionLayout(
+    uiState: FraudDetectionUiState,
+    onNavigateToTab: (FraudDetectionTab) -> Unit,
+    onClaimIdSubmit: (String) -> Unit,
+    onNewClaimSubmit: (String, String, String, String, String) -> Unit,
+    onActorSubmit: (ActorType, String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        NavigationRail(
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            FraudDetectionTab.entries.forEach { tab ->
+                NavigationRailItem(
+                    selected = uiState.currentTab == tab,
+                    onClick = { onNavigateToTab(tab) },
+                    icon = {
+                        Text(
+                            text = tab.icon,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = tab.title,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
+        }
+
+        Box(modifier = Modifier.weight(1f)) {
+            when (uiState.currentTab) {
+                FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
+                    isLoading = uiState.isLoading,
+                    result = uiState.result,
+                    onSubmit = onClaimIdSubmit
+                )
+                FraudDetectionTab.NEW_CLAIM -> NewClaimDetectionScreen(
+                    isLoading = uiState.isLoading,
+                    result = uiState.result,
+                    onSubmit = onNewClaimSubmit
+                )
+                FraudDetectionTab.ACTOR -> ActorDetectionScreen(
+                    isLoading = uiState.isLoading,
+                    result = uiState.result,
+                    onSubmit = onActorSubmit
+                )
+            }
+        }
+    }
+}
+
+@Serializable
+object FraudDetection
+
+@Composable
+@JKBPreview
+fun FraudDetectionScreenPreview() {
+    JKBTheme {
+        FraudDetectionScreenContent(
+            uiState = FraudDetectionUiState(),
+            onNavigateToTab = {},
+            onClaimIdSubmit = {},
+            onNewClaimSubmit = { _, _, _, _, _ -> },
+            onActorSubmit = { _, _ -> }
+        )
+    }
+}

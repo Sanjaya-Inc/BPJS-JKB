@@ -49,19 +49,4 @@ sealed interface MenuIntent {
 @KoinViewModel
 class MenuViewModel : BaseViewModel<MenuUiState, Unit>(
     initialState = MenuUiState()
-) {
-    override fun onIntent(intent: Any) {
-        when (intent) {
-            is MenuIntent.NavigateToFeature -> navigateToFeature(intent.menuItem)
-            is MenuIntent.NavigateToProfile -> navigateToProfile()
-        }
-    }
-
-    private fun navigateToFeature(menuItem: MenuItem) {
-        sendIntent(MenuIntent.NavigateToFeature(menuItem))
-    }
-
-    private fun navigateToProfile() {
-        sendIntent(MenuIntent.NavigateToProfile)
-    }
-}
+)

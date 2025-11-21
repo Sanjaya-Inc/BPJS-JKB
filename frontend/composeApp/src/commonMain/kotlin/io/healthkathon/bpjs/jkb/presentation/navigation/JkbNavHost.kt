@@ -10,6 +10,8 @@ import io.healthkathon.bpjs.jkb.presentation.screen.SplashScreen
 import io.healthkathon.jkb.core.presentation.component.rememberSnackBarHostState
 import io.healthkathon.jkb.core.presentation.theme.LocalNavController
 import io.healthkathon.jkb.core.presentation.theme.LocalSnackBarHost
+import io.healthkathon.jkb.frauddetection.presentation.FraudDetection
+import io.healthkathon.jkb.frauddetection.presentation.FraudDetectionScreen
 import io.healthkathon.jkb.menu.presentation.Menu
 import io.healthkathon.jkb.menu.presentation.MenuScreen
 import io.healthkathon.jkb.onboarding.presentation.Onboarding
@@ -29,6 +31,7 @@ fun JkbNavHost() {
             composable<Splash> { SplashScreen() }
             composable<Onboarding> { OnboardingScreen() }
             composable<Menu> { MenuScreen() }
+            composable<FraudDetection> { FraudDetectionScreen() }
         }
     }
 }
