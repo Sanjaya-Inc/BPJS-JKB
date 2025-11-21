@@ -3,6 +3,7 @@ package io.healthkathon.bpjs.jkb.presentation.utils
 import io.healthkathon.bpjs.jkb.di.AppModule
 import io.healthkathon.jkb.core.di.CoreModules
 import io.healthkathon.jkb.core.presentation.utils.PlatformContext
+import io.healthkathon.jkb.menu.di.MenuModule
 import io.healthkathon.jkb.onboarding.di.OnbaordingModule
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -16,5 +17,6 @@ internal fun getKoinModules(context: PlatformContext?): List<Module> = listOf(
         single<PlatformContext?> { context }
     },
     AppModule.module,
-    OnbaordingModule.module
+    OnbaordingModule.module,
+    MenuModule.module
 )

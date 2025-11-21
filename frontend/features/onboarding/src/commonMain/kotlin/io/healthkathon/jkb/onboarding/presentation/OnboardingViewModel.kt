@@ -51,8 +51,6 @@ class OnboardingViewModel : BaseViewModel<OnboardingUiState, Unit>(
             is OnboardingIntent.NextPage -> nextPage()
             is OnboardingIntent.PreviousPage -> previousPage()
             is OnboardingIntent.GoToPage -> goToPage(intent.page)
-            is OnboardingIntent.Skip -> skip()
-            is OnboardingIntent.Complete -> complete()
         }
     }
 
@@ -74,13 +72,5 @@ class OnboardingViewModel : BaseViewModel<OnboardingUiState, Unit>(
 
     private fun goToPage(page: Int) = intent {
         reduce { state.copy(currentPage = page) }
-    }
-
-    private fun skip() {
-        sendIntent(OnboardingIntent.Skip)
-    }
-
-    private fun complete() {
-        sendIntent(OnboardingIntent.Complete)
     }
 }

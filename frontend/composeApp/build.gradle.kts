@@ -28,6 +28,9 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core"))
             implementation(project(":features:onboarding"))
+            implementation(project(":features:fraud-detection"))
+            implementation(project(":features:chatbot"))
+            implementation(project(":features:menu"))
         }
     }
 }

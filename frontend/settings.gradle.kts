@@ -41,3 +41,6 @@ plugins {
 include(":composeApp")
 include(":core")
 include(":features:onboarding")
+include(":features:fraud-detection")
+include(":features:chatbot")
+include(":features:menu")
