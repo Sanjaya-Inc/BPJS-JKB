@@ -19,6 +19,7 @@ import io.healthkathon.jkb.frauddetection.data.model.HospitalResponse
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimResponse
 import kotlinx.coroutines.delay
+import kotlinx.datetime.Clock
 
 class FraudDetectionMockedApi : FraudDetectionRemoteApi {
     override suspend fun getHospitals(): HospitalResponse {
@@ -318,7 +319,7 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
     }
 
     override suspend fun checkByClaimId(claimCheckRequest: ClaimCheckRequest): ClaimCheckAnswerData {
-        delay(2000)
+        delay(3000)
 
         val claimId = claimCheckRequest.claimId
 
@@ -334,135 +335,45 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
 
         val confidenceScore = if (validationResult == "FRAUD") 85 else 100
 
-        val explanation = if (validationResult == "NORMAL") {
-            """
-# Hasil Analisis Fraud - Klaim ID: $claimId
-
-## 📊 Ringkasan Analisis
-**Status**: ✅ Klaim Normal  
-**Tingkat Kepercayaan**: **$confidenceScore%**  
-**Tanggal Analisis**: 21 November 2025, 14:30 WIB
-
----
-
-## 🔍 Detail Klaim
-- **ID Klaim**: $claimId
-- **Rumah Sakit**: RS Harapan Sehat
-- **Dokter**: Dr. Ahmad Wijaya, Sp.PD
-- **Diagnosis**: Diabetes Mellitus Type 2
-- **Biaya Total**: Rp 13.200.000
-- **Tanggal Klaim**: 15 November 2025
-
----
-
-## ✅ Validasi Berhasil
-
-### 1. Konsistensi Biaya
-- Biaya sesuai dengan standar tarif INA-CBG untuk diagnosis ini
-- Tidak ada item biaya yang mencurigakan
-- Biaya administrasi dalam batas normal (8%)
-
-### 2. Pola Temporal Normal
-- Waktu perawatan sesuai dengan standar medis (36 jam)
-- Tidak ada clustering klaim yang mencurigakan
-- Dokumentasi lengkap dan tepat waktu
-
-### 3. Profil Pasien Normal
-- Riwayat klaim konsisten dengan kondisi medis
-- Tidak ada pola kunjungan yang tidak wajar
-- Dokumentasi medis lengkap dan valid
-
----
-
-## 💡 Rekomendasi
-
-**Proses Klaim**: Klaim dapat diproses untuk pembayaran sesuai prosedur standar.
-
-**Monitoring**: Lanjutkan monitoring rutin tanpa tindakan khusus.
-
----
-
-## 📈 Analisis Komparatif
-
-| Metrik | Klaim Ini | Rata-rata Normal | Status |
-|--------|-----------|------------------|--------|
-| Biaya Total | Rp 13.2 jt | Rp 13.2 jt | ✅ Normal |
-| Durasi Rawat | 36 jam | 36 jam | ✅ Normal |
-| Jumlah Obat | 4 item | 4 item | ✅ Normal |
-| Biaya Admin | 8% | 8% | ✅ Normal |
-
----
-
-**Catatan**: Analisis ini dihasilkan oleh sistem AI dengan tingkat kepercayaan $confidenceScore%. Klaim telah melewati semua validasi otomatis.
-            """.trimIndent()
+        val detailClaimDataText = if (validationResult == "NORMAL") {
+            """{"c.id": "$claimId", "c.total_cost": 13200000.0, "c.status": "NORMAL", """ +
+                """"patient_name": "Budi Santoso", "hospital_name": "RS Harapan Sehat", """ +
+                """"doctor_name": "Dr. Ahmad Wijaya, Sp.PD", "diagnosis_name": "Diabetes Mellitus Type 2", """ +
+                """"primary_procedures": ["Insulin Therapy", "Blood Sugar Monitoring"], """ +
+                """"secondary_procedures": ["Dietary Counseling", "Exercise Program"], """ +
+                """"note.primary_diagnosis_text": "Diabetes Mellitus Type 2", """ +
+                """"note.secondary_diagnosis_text": "Patient requires regular monitoring and medication adjustment"}"""
         } else {
-            """
-# Hasil Analisis Fraud - Klaim ID: $claimId
-
-## 📊 Ringkasan Analisis
-**Status**: ⚠️ Potensi Fraud Terdeteksi  
-**Tingkat Risiko**: **TINGGI** ($confidenceScore%)  
-**Tanggal Analisis**: 21 November 2025, 14:30 WIB
-
----
-
-## 🔍 Detail Klaim
-- **ID Klaim**: $claimId
-- **Rumah Sakit**: RS Harapan Sehat
-- **Dokter**: Dr. Ahmad Wijaya, Sp.PD
-- **Diagnosis**: Diabetes Mellitus Type 2
-- **Biaya Total**: Rp 45.750.000
-- **Tanggal Klaim**: 15 November 2025
-
----
-
-## ⚠️ Indikator Fraud Terdeteksi
-
-### 1. Pola Biaya Tidak Wajar
-- Biaya pengobatan **3.5x lebih tinggi** dari rata-rata kasus serupa
-- Terdapat **15 item obat** yang tidak relevan dengan diagnosis
-- Biaya administrasi mencapai **25%** dari total (normal: 5-10%)
-
-### 2. Pola Temporal Mencurigakan
-- Klaim diajukan pada **hari yang sama** dengan 8 klaim lain dari RS yang sama
-- Waktu perawatan hanya **2 jam** untuk diagnosis yang memerlukan observasi minimal 24 jam
-
-### 3. Anomali Data Pasien
-- Pasien tercatat melakukan **12 kunjungan** dalam 30 hari terakhir
-- Riwayat klaim menunjukkan pola **diagnosis berulang** yang tidak konsisten
-
----
-
-## 💡 Rekomendasi Tindakan
-
-1. **Investigasi Mendalam**
-   - Verifikasi keberadaan pasien dan validitas dokumen medis
-   - Audit rekam medis lengkap dari rumah sakit
-
-2. **Tindakan Preventif**
-   - Tahan pembayaran klaim hingga investigasi selesai
-   - Lakukan wawancara dengan dokter dan pasien terkait
-
-3. **Monitoring Berkelanjutan**
-   - Tambahkan RS Harapan Sehat ke daftar pengawasan khusus
-   - Monitor pola klaim dari Dr. Ahmad Wijaya
-
----
-
-## 📈 Analisis Komparatif
-
-| Metrik | Klaim Ini | Rata-rata Normal | Deviasi |
-|--------|-----------|------------------|---------|
-| Biaya Total | Rp 45.7 jt | Rp 13.2 jt | +246% |
-| Durasi Rawat | 2 jam | 36 jam | -94% |
-| Jumlah Obat | 15 item | 4 item | +275% |
-| Biaya Admin | 25% | 8% | +213% |
-
----
-
-**Catatan**: Analisis ini dihasilkan oleh sistem AI dan memerlukan verifikasi manual oleh tim investigasi fraud.
-            """.trimIndent()
+            """{"c.id": "$claimId", "c.total_cost": 45750000.0, "c.status": "FRAUD", """ +
+                """"patient_name": "Budi Santoso", "hospital_name": "RS Harapan Sehat", """ +
+                """"doctor_name": "Dr. Ahmad Wijaya, Sp.PD", "diagnosis_name": "Diabetes Mellitus Type 2", """ +
+                """"primary_procedures": ["Insulin Therapy", "Blood Sugar Monitoring"], """ +
+                """"secondary_procedures": ["Dietary Counseling", "Exercise Program", "Multiple 
+                    |Unnecessary Tests"], 
+                """.trimMargin() +
+                """"note.primary_diagnosis_text": "Diabetes Mellitus Type 2", """ +
+                """"note.secondary_diagnosis_text": "Excessive medication costs and unnecess
+                    |ary procedures detected. 
+                """.trimMargin() +
+                """Patient has 12 visits in 30 days with inconsistent diagnosis patterns"}"""
         }
+
+        val explanationText = if (validationResult == "NORMAL") {
+            "The claim status is validated as \"NORMAL\". All checks passed successfully. " +
+                "The claim shows consistent billing patterns, appropriate treatment costs, " +
+                "and normal temporal patterns. No fraud indicators detected."
+        } else {
+            "The claim status is flagged as \"FRAUD\". Multiple fraud indicators detected including: " +
+                "excessive costs (3.5x higher than average), suspicious temporal patterns " +
+                "(multiple claims on same day), and abnormal patient visit frequency " +
+                "(12 visits in 30 days). Requires immediate investigation."
+        }
+
+        val explanation = """Claim ID: $claimId  
+Validation Result: $validationResult  
+Confidence Score: $confidenceScore%  
+Detail Claim Data: $detailClaimDataText  
+Explanation: $explanationText"""
 
         return ClaimCheckAnswerData(
             claimId = claimId,
@@ -477,93 +388,95 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
     override suspend fun checkNewClaim(newClaimRequest: NewClaimRequest): NewClaimResponse {
         delay(2500)
 
-        val hospitalName = newClaimRequest.hospitalId
-        val doctorName = newClaimRequest.doctorId
+        val hospitalId = newClaimRequest.hospitalId
+        val doctorId = newClaimRequest.doctorId
+        val diagnosisId = newClaimRequest.diagnosisId
         val costValue = newClaimRequest.totalCost
-        val formattedCost =
-            "Rp ${costValue.toString().reversed().chunked(3).joinToString(".").reversed()}"
+        val primaryProcedure = newClaimRequest.primaryProcedure
+        val secondaryProcedure = newClaimRequest.secondaryProcedure
+        val diagnosisText = newClaimRequest.diagnosisText
+
+        // Determine if this is a fraud case based on diagnosis ID or cost
+        val isFraud = diagnosisId == "I63" || costValue < 20000000.0
+
+        val validationResult = if (isFraud) "FRAUD" else "NORMAL"
+        val confidenceScore = if (isFraud) 95 else 85
+
+        val formattedCost = costValue.toString()
 
         val formDataSummary = """
-Hospital ID: $hospitalName
-Doctor ID: $doctorName
-Diagnosis ID: ${newClaimRequest.diagnosisId}
+Hospital ID: $hospitalId
+Doctor ID: $doctorId
+Diagnosis ID: $diagnosisId
 Total Cost: $formattedCost
-Primary Procedure: ${newClaimRequest.primaryProcedure}
-Secondary Procedure: ${newClaimRequest.secondaryProcedure}
-Diagnosis Text: ${newClaimRequest.diagnosisText}
+Primary Procedure: $primaryProcedure
+Secondary Procedure: $secondaryProcedure
+Diagnosis Text: $diagnosisText
         """.trimIndent()
 
-        val detailAnalysis = """
-# 📊 Analisis Detail Klaim
+        val claimId = "CLM-${Clock.System.now().epochSeconds}"
 
-## Informasi Klaim
-- **Hospital ID**: $hospitalName
-- **Doctor ID**: $doctorName
-- **Diagnosis ID**: ${newClaimRequest.diagnosisId}
-- **Biaya Total**: $formattedCost
-- **Prosedur Utama**: ${newClaimRequest.primaryProcedure}
-- **Prosedur Sekunder**: ${newClaimRequest.secondaryProcedure}
+        val detailAnalysis = if (isFraud) {
+            """Claim ID: $claimId  
+Validation Result: FRAUD  
+Confidence Score: $confidenceScore%  
+Detail Claim Data: {Hospital ID: $hospitalId, Doctor ID: $doctorId, Diagnosis ID: $diagnosisId, 
+Total Cost: $formattedCost, Primary Procedure: $primaryProcedure, Secondary 
+Procedure: $secondaryProcedure, Diagnosis Text: $diagnosisText}  
+Explanation: The claim failed all validation steps. 1) No relationships found 
+between diagnosis $diagnosisId and procedures $primaryProcedure/$secondaryProcedure in the 
+graph database. 2) No diagnosis node found with code $diagnosisId. 3) No procedure nodes found 
+for $primaryProcedure/$secondaryProcedure. 4) No doctor node found with ID $doctorId. 5) 
+No hospital node found with ID $hospitalId.  This indicates the claim data is not present in 
+the graph database, making it impossible to perform any validation.  The absence of data in the 
+graph database suggests potential fraud or data entry errors."""
+        } else {
+            """Claim ID: $claimId  
+Validation Result: NORMAL  
+Confidence Score: $confidenceScore%  
+Detail Claim Data: {Hospital ID: $hospitalId, Doctor ID: $doctorId, 
+Diagnosis ID: $diagnosisId, Total Cost: $formattedCost, 
+Primary Procedure: $primaryProcedure, Secondary Procedure: $secondaryProcedure, 
+Diagnosis Text: $diagnosisText}  
+Explanation: The claim passed all validation steps. 1) Relationships 
+found between diagnosis $diagnosisId and procedures $primaryProcedure/$secondaryProcedure 
+in the graph database. 2) Diagnosis node found with code $diagnosisId.
+3) Procedure nodes found for $primaryProcedure/$secondaryProcedure. 
+4) Doctor node found with ID $doctorId. 
+5) Hospital node found with ID $hospitalId. 
+All data is consistent and valid."""
+        }
 
----
-
-## ✅ Validasi Berhasil
-
-### 1. Konsistensi Data
-- Biaya sesuai dengan standar tarif INA-CBG untuk diagnosis ini
-- Tindakan medis relevan dengan diagnosis yang diberikan
-- Tidak ada duplikasi klaim dalam 30 hari terakhir
-
-### 2. Profil Provider
-- Rumah sakit memiliki **track record baik** (compliance rate: 98%)
-- Dokter terdaftar dan memiliki **sertifikasi aktif**
-- Tidak ada riwayat fraud dari provider ini
-
-### 3. Pola Klaim Normal
-- Frekuensi klaim dalam batas wajar
-- Tidak ada anomali temporal terdeteksi
-- Dokumentasi lengkap dan valid
-
----
-
-## 📈 Skor Kredibilitas
-
-| Aspek | Skor | Status |
-|-------|------|--------|
-| Konsistensi Biaya | 95/100 | ✅ Excellent |
-| Validitas Provider | 98/100 | ✅ Excellent |
-| Kelengkapan Data | 92/100 | ✅ Excellent |
-| Pola Historis | 88/100 | ✅ Good |
-
-**Skor Total**: **93/100** - Klaim Valid
-        """.trimIndent()
-
-        val explanation = """
-# 💡 Penjelasan Hasil Validasi
-
-## Kesimpulan
-Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak ditemukan indikasi fraud atau anomali yang mencurigakan.
-
-## Rekomendasi Tindakan
-
-### ✅ Proses Klaim
-- Klaim dapat diproses untuk pembayaran
-- Tidak diperlukan investigasi tambahan
-- Dokumentasi lengkap dan sesuai standar
-
-### 📊 Monitoring Rutin
-- Lanjutkan monitoring standar
-- Update database pola klaim normal
-- Catat sebagai referensi klaim valid
-
----
-
-**Catatan**: Analisis ini dihasilkan oleh sistem AI dengan tingkat kepercayaan 85%. Klaim telah melewati semua validasi otomatis dan dapat diproses sesuai prosedur standar.
-        """.trimIndent()
+        val explanation = if (isFraud) {
+            """Claim ID: $claimId  
+Validation Result: FRAUD  
+Confidence Score: $confidenceScore%  
+Detail Claim Data: {Hospital ID: $hospitalId, Doctor ID: $doctorId, Diagnosis ID: $diagnosisId, 
+Total Cost: $formattedCost, Primary Procedure: $primaryProcedure, Secondary 
+Procedure: $secondaryProcedure, Diagnosis Text: $diagnosisText}  
+Explanation: The claim failed all validation steps. 1) No relationships found between 
+diagnosis $diagnosisId and procedures $primaryProcedure/$secondaryProcedure in the graph 
+database. 2) No diagnosis node found with code $diagnosisId. 3) No procedure nodes found 
+for $primaryProcedure/$secondaryProcedure. 4) No doctor node found with ID $doctorId. 5) 
+No hospital node found with ID $hospitalId.  This indicates the claim data is not present 
+in the graph database, making it impossible to perform any validation.  The absence of data 
+in the graph database suggests potential fraud or data entry errors."""
+        } else {
+            """Claim ID: $claimId  
+Validation Result: NORMAL  
+Confidence Score: $confidenceScore%  
+Detail Claim Data: {Hospital ID: $hospitalId, Doctor ID: $doctorId, 
+Diagnosis ID: $diagnosisId, Total Cost: $formattedCost, 
+Primary Procedure: $primaryProcedure, Secondary Procedure: $secondaryProcedure, 
+Diagnosis Text: $diagnosisText}  
+Explanation: The claim passed all validation steps successfully. 
+All data is present in the graph database and relationships are valid."""
+        }
 
         return NewClaimResponse(
             formDataSummary = formDataSummary,
-            validationResult = "NORMAL",
-            confidenceScore = 85,
+            validationResult = validationResult,
+            confidenceScore = confidenceScore,
             detailAnalysis = detailAnalysis,
             explanation = explanation,
             status = "success"
@@ -607,16 +520,22 @@ Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak dit
 - **Rata-rata Nilai Klaim**: Rp ${if (validationResult == "SUSPICIOUS") "4.8" else "4.1"} Juta
 
 ### Distribusi Diagnosis
-1. **Diabetes Mellitus** - ${if (validationResult == "SUSPICIOUS") "45" else "22"} klaim (${if (validationResult == "SUSPICIOUS") "18" else "15"}%)
-2. **Hipertensi** - ${if (validationResult == "SUSPICIOUS") "38" else "20"} klaim (${if (validationResult == "SUSPICIOUS") "15" else "14"}%)
-3. **ISPA** - ${if (validationResult == "SUSPICIOUS") "32" else "18"} klaim (${if (validationResult == "SUSPICIOUS") "13" else "12"}%)
-4. **Gastritis** - ${if (validationResult == "SUSPICIOUS") "28" else "15"} klaim (${if (validationResult == "SUSPICIOUS") "11" else "10"}%)
-5. **Lainnya** - ${if (validationResult == "SUSPICIOUS") "104" else "70"} klaim (${if (validationResult == "SUSPICIOUS") "43" else "49"}%)
+1. **Diabetes Mellitus** - ${if (validationResult == "SUSPICIOUS") "45" else "22"} 
+klaim (${if (validationResult == "SUSPICIOUS") "18" else "15"}%)
+2. **Hipertensi** - ${if (validationResult == "SUSPICIOUS") "38" else "20"} 
+klaim (${if (validationResult == "SUSPICIOUS") "15" else "14"}%)
+3. **ISPA** - ${if (validationResult == "SUSPICIOUS") "32" else "18"} 
+klaim (${if (validationResult == "SUSPICIOUS") "13" else "12"}%)
+4. **Gastritis** - ${if (validationResult == "SUSPICIOUS") "28" else "15"} 
+klaim (${if (validationResult == "SUSPICIOUS") "11" else "10"}%)
+5. **Lainnya** - ${if (validationResult == "SUSPICIOUS") "104" else "70"} 
+klaim (${if (validationResult == "SUSPICIOUS") "43" else "49"}%)
 
 ---
 
-${if (validationResult == "SUSPICIOUS") {
-"""
+${
+            if (validationResult == "SUSPICIOUS") {
+                """
 ## ⚠️ Pola Mencurigakan Terdeteksi
 
 ### 1. Anomali Biaya
@@ -661,8 +580,8 @@ ${if (validationResult == "SUSPICIOUS") {
    - Peringatan formal jika diperlukan
 
 """
-        } else {
-"""
+            } else {
+                """
 ## ✅ Profil Normal
 
 ### 1. Pola Biaya Normal
@@ -689,7 +608,8 @@ ${if (validationResult == "SUSPICIOUS") {
 **Status**: $actorDisplayName ini memiliki profil klaim yang normal dan tidak memerlukan investigasi tambahan.
 
 """
-        }}
+            }
+        }
 
 ---
 
@@ -706,8 +626,9 @@ ${if (validationResult == "SUSPICIOUS") {
 
 ---
 
-${if (validationResult == "SUSPICIOUS") {
-"""
+${
+            if (validationResult == "SUSPICIOUS") {
+                """
 ## 📈 Trend Analysis (6 Bulan)
 
 ```
@@ -737,12 +658,13 @@ Nov: ███████████████ 112 ⚠️
 **Tindak Lanjut**: Tim investigasi akan menghubungi dalam 3 hari kerja untuk proses audit.
 
 """
-        } else {
-"""
+            } else {
+                """
 **Kesimpulan**: $actorDisplayName ini memiliki profil klaim yang sehat dan tidak menunjukkan indikasi fraud. Lanjutkan monitoring rutin.
 
 """
-        }}
+            }
+        }
         """.trimIndent()
 
         return ClaimCheckAnswerData(
@@ -914,6 +836,49 @@ Nov: ███████████████ 112 ⚠️
         delay(1200)
 
         val hospitalAnalysisMap = mapOf(
+            "HOS001" to HospitalAnalysisResponse(
+                data = listOf(
+                    HospitalAnalysisData(
+                        diagnosisId = "K35.80",
+                        diagnosisName = "Acute Appendicitis",
+                        totalClaims = 1,
+                        zScore = 1.499225489832609
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "K40.9",
+                        diagnosisName = "Inguinal Hernia",
+                        totalClaims = 1,
+                        zScore = 0.7071067811865475
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "Z00.0",
+                        diagnosisName = "General Medical Exam",
+                        totalClaims = 1,
+                        zScore = 0.7071067811865475
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "I21.9",
+                        diagnosisName = "Acute Myocardial Infarction (Heart Attack)",
+                        totalClaims = 3,
+                        zScore = 0.4993445076308957
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "G43.9",
+                        diagnosisName = "Migraine",
+                        totalClaims = 1,
+                        zScore = 0.0
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "R07.9",
+                        diagnosisName = "Chest Pain Unspecified",
+                        totalClaims = 1,
+                        zScore = -0.7071067811865476
+                    )
+                ),
+                hospitalId = "HOS001",
+                hospitalName = "RSUP Dr. Hasan Sadikin (RSHS)",
+                analysisType = "claiming_behavior_normal_distribution"
+            ),
             "HOS002" to HospitalAnalysisResponse(
                 data = listOf(
                     HospitalAnalysisData(
