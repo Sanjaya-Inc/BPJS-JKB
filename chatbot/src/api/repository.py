@@ -106,7 +106,12 @@ class HealthcareRepository:
                h.id AS hospital_id,
                diag.code AS diagnosis,
                c.total_cost AS total_cost,
-               c.status AS label,
+               CASE 
+                 WHEN c.status IS NULL THEN ''
+                 WHEN toString(c.status) = 'NaN' THEN ''
+                 WHEN toString(c.status) = '' THEN ''
+                 ELSE c.status
+               END AS label,
                cn.text_raw AS medical_resume_json
         ORDER BY c.id
         """
