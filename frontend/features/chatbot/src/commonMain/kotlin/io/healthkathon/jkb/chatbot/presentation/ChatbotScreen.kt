@@ -58,8 +58,7 @@ fun ChatbotScreen(
     val state = viewModel.collectAsState().value
     ChatbotScreenContent(
         uiState = state,
-        onSendMessage = { viewModel.sendIntent(ChatbotIntent.SendMessage(it)) },
-        onClearChat = { viewModel.sendIntent(ChatbotIntent.ClearChat) },
+        onIntent = viewModel::sendIntent,
         modifier = modifier
     )
 }
@@ -67,9 +66,8 @@ fun ChatbotScreen(
 @Composable
 private fun ChatbotScreenContent(
     uiState: ChatbotUiState,
-    onSendMessage: (String) -> Unit,
-    onClearChat: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onIntent: (ChatbotIntent) -> Unit = {}
 ) {
     Scaffold(modifier = modifier) { paddingValues ->
         AdaptiveAnimatedLayout(
@@ -79,15 +77,13 @@ private fun ChatbotScreenContent(
             compactContent = {
                 CompactChatLayout(
                     uiState = uiState,
-                    onSendMessage = onSendMessage,
-                    onClearChat = onClearChat
+                    onIntent = onIntent
                 )
             },
             expandedContent = {
                 ExpandedChatLayout(
                     uiState = uiState,
-                    onSendMessage = onSendMessage,
-                    onClearChat = onClearChat
+                    onIntent = onIntent
                 )
             }
         )
@@ -97,8 +93,7 @@ private fun ChatbotScreenContent(
 @Composable
 private fun CompactChatLayout(
     uiState: ChatbotUiState,
-    onSendMessage: (String) -> Unit,
-    onClearChat: () -> Unit,
+    onIntent: (ChatbotIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -107,7 +102,7 @@ private fun CompactChatLayout(
             .background(MaterialTheme.colorScheme.background)
     ) {
         ChatHeader(
-            onClearChat = onClearChat,
+            onClearChat = { onIntent(ChatbotIntent.ClearChat) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -122,7 +117,7 @@ private fun CompactChatLayout(
         }
 
         ChatInput(
-            onSendMessage = onSendMessage,
+            onSendMessage = { message -> onIntent(ChatbotIntent.SendMessage(message)) },
             isEnabled = !uiState.isTyping,
             modifier = Modifier
                 .fillMaxWidth()
@@ -134,8 +129,7 @@ private fun CompactChatLayout(
 @Composable
 private fun ExpandedChatLayout(
     uiState: ChatbotUiState,
-    onSendMessage: (String) -> Unit,
-    onClearChat: () -> Unit,
+    onIntent: (ChatbotIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -160,7 +154,7 @@ private fun ExpandedChatLayout(
                 .fillMaxSize()
         ) {
             ChatHeader(
-                onClearChat = onClearChat,
+                onClearChat = { onIntent(ChatbotIntent.ClearChat) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -175,7 +169,7 @@ private fun ExpandedChatLayout(
             }
 
             ChatInput(
-                onSendMessage = onSendMessage,
+                onSendMessage = { message -> onIntent(ChatbotIntent.SendMessage(message)) },
                 isEnabled = !uiState.isTyping,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -602,9 +596,7 @@ fun ChatbotScreenPreview() {
                     )
                 ),
                 isTyping = false
-            ),
-            onSendMessage = {},
-            onClearChat = {}
+            )
         )
     }
 }

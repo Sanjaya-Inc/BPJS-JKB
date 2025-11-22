@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.healthkathon.jkb.frauddetection.presentation.FraudDetectionIntent
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -38,7 +39,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun ClaimIdDetectionScreen(
     isLoading: Boolean,
     result: String?,
-    onSubmit: (String) -> Unit,
+    onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var claimId by remember { mutableStateOf("") }
@@ -96,7 +97,11 @@ fun ClaimIdDetectionScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { onSubmit(claimId) },
+            onClick = {
+                onIntent(
+                    FraudDetectionIntent.SubmitClaimId(claimId)
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = claimId.isNotBlank() && !isLoading,
             shape = RoundedCornerShape(12.dp)

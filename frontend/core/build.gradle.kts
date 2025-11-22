@@ -64,9 +64,21 @@ buildConfig {
         "api.base.url property is missing or empty in local.properties. Please add: api.base.url"
     }
     
+    val apiMockedProperty = localPropertiesContent.lines()
+        .find { line -> line.startsWith("api.mocked=") }
+        ?.substringAfter("api.mocked=")
+        ?.trim()
+        ?.toBoolean() ?: false
+    
     buildConfigField(
         "String",
         "BASE_URL",
         "\"$apiBaseUrlProperty\""
+    )
+    
+    buildConfigField(
+        "Boolean",
+        "API_MOCKED",
+        "$apiMockedProperty"
     )
 }

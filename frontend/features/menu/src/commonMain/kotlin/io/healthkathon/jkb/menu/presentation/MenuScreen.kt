@@ -60,8 +60,7 @@ fun MenuScreen(
     val state = viewModel.collectAsState().value
     MenuScreenContent(
         uiState = state,
-        onMenuItemClick = { viewModel.sendIntent(MenuIntent.NavigateToFeature(it)) },
-        onProfileClick = { viewModel.sendIntent(MenuIntent.NavigateToProfile) },
+        onIntent = viewModel::sendIntent,
         modifier = modifier
     )
 }
@@ -70,8 +69,7 @@ fun MenuScreen(
 @Composable
 private fun MenuScreenContent(
     uiState: MenuUiState,
-    onMenuItemClick: (MenuItem) -> Unit,
-    onProfileClick: () -> Unit,
+    onIntent: (MenuIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -93,7 +91,7 @@ private fun MenuScreenContent(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onProfileClick) {
+                    IconButton(onClick = { onIntent(MenuIntent.NavigateToProfile) }) {
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -128,13 +126,13 @@ private fun MenuScreenContent(
             compactContent = {
                 CompactMenuLayout(
                     uiState = uiState,
-                    onMenuItemClick = onMenuItemClick
+                    onIntent = onIntent
                 )
             },
             expandedContent = {
                 ExpandedMenuLayout(
                     uiState = uiState,
-                    onMenuItemClick = onMenuItemClick
+                    onIntent = onIntent
                 )
             }
         )
@@ -144,7 +142,7 @@ private fun MenuScreenContent(
 @Composable
 private fun CompactMenuLayout(
     uiState: MenuUiState,
-    onMenuItemClick: (MenuItem) -> Unit,
+    onIntent: (MenuIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -163,7 +161,7 @@ private fun CompactMenuLayout(
 
         MenuGrid(
             menuItems = uiState.menuItems,
-            onMenuItemClick = onMenuItemClick,
+            onMenuItemClick = { menuItem -> onIntent(MenuIntent.NavigateToFeature(menuItem)) },
             columns = 1,
             modifier = Modifier.weight(1f)
         )
@@ -173,7 +171,7 @@ private fun CompactMenuLayout(
 @Composable
 private fun ExpandedMenuLayout(
     uiState: MenuUiState,
-    onMenuItemClick: (MenuItem) -> Unit,
+    onIntent: (MenuIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -197,7 +195,7 @@ private fun ExpandedMenuLayout(
             uiState.menuItems.forEach { menuItem ->
                 ExpandedMenuItemCard(
                     menuItem = menuItem,
-                    onClick = { onMenuItemClick(menuItem) },
+                    onClick = { onIntent(MenuIntent.NavigateToFeature(menuItem)) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -440,8 +438,7 @@ fun MenuScreenPreview() {
     JKBTheme {
         MenuScreenContent(
             uiState = MenuUiState(),
-            onMenuItemClick = {},
-            onProfileClick = {}
+            onIntent = {}
         )
     }
 }

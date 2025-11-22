@@ -34,15 +34,26 @@ class SplashScreenViewModel(
             when (intent) {
                 is SplashScreenIntent.Init -> {
                     reduce { state.copy(isLoading = true) }
-                    val data = coreRepository.getServiceData()
-                    reduce {
-                        state.copy(
-                            title = data.message ?: "BPJS JKB",
-                            version = data.version ?: "",
-                            isLoading = false
-                        )
+                    coreRepository.runCatching {
+                        getServiceData()
+                    }.onFailure {
+                        reduce {
+                            state.copy(
+                                title = "BPJS JKB",
+                                version = "Error getting version",
+                                isLoading = false
+                            )
+                        }
+                    }.onSuccess { response ->
+                        reduce {
+                            state.copy(
+                                title = response.message ?: "BPJS JKB",
+                                version = response.version ?: "",
+                                isLoading = false
+                            )
+                        }
+                        delay(1000.milliseconds)
                     }
-                    delay(1000.milliseconds)
                     sendIntent(SplashScreenIntent.NavigateToOnBoarding)
                 }
             }

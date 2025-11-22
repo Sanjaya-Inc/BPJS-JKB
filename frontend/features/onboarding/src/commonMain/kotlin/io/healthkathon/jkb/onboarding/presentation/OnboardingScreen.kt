@@ -55,11 +55,7 @@ fun OnboardingScreen(
     val state = viewModel.collectAsState().value
     OnboardingScreenContent(
         uiState = state,
-        onNextPage = { viewModel.sendIntent(OnboardingIntent.NextPage) },
-        onPreviousPage = { viewModel.sendIntent(OnboardingIntent.PreviousPage) },
-        onGoToPage = { viewModel.sendIntent(OnboardingIntent.GoToPage(it)) },
-        onSkip = { viewModel.sendIntent(OnboardingIntent.Skip) },
-        onComplete = { viewModel.sendIntent(OnboardingIntent.Complete) },
+        onIntent = viewModel::sendIntent,
         modifier = modifier
     )
 }
@@ -67,11 +63,7 @@ fun OnboardingScreen(
 @Composable
 private fun OnboardingScreenContent(
     uiState: OnboardingUiState,
-    onNextPage: () -> Unit,
-    onPreviousPage: () -> Unit,
-    onGoToPage: (Int) -> Unit,
-    onSkip: () -> Unit,
-    onComplete: () -> Unit,
+    onIntent: (OnboardingIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(modifier = modifier) { paddingValues ->
@@ -82,21 +74,13 @@ private fun OnboardingScreenContent(
             compactContent = {
                 CompactOnboardingLayout(
                     uiState = uiState,
-                    onNextPage = onNextPage,
-                    onPreviousPage = onPreviousPage,
-                    onGoToPage = onGoToPage,
-                    onSkip = onSkip,
-                    onComplete = onComplete
+                    onIntent = onIntent
                 )
             },
             expandedContent = {
                 ExpandedOnboardingLayout(
                     uiState = uiState,
-                    onNextPage = onNextPage,
-                    onPreviousPage = onPreviousPage,
-                    onGoToPage = onGoToPage,
-                    onSkip = onSkip,
-                    onComplete = onComplete
+                    onIntent = onIntent
                 )
             }
         )
@@ -106,11 +90,7 @@ private fun OnboardingScreenContent(
 @Composable
 private fun CompactOnboardingLayout(
     uiState: OnboardingUiState,
-    onNextPage: () -> Unit,
-    onPreviousPage: () -> Unit,
-    onGoToPage: (Int) -> Unit,
-    onSkip: () -> Unit,
-    onComplete: () -> Unit,
+    onIntent: (OnboardingIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -130,7 +110,7 @@ private fun CompactOnboardingLayout(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                TextButton(onClick = onSkip) {
+                TextButton(onClick = { onIntent(OnboardingIntent.Skip) }) {
                     Text(stringResource(CoreResources.ctaSkip))
                 }
             }
@@ -148,7 +128,7 @@ private fun CompactOnboardingLayout(
         PageIndicator(
             pageCount = uiState.pages.size,
             currentPage = uiState.currentPage,
-            onPageClick = onGoToPage,
+            onPageClick = { page -> onIntent(OnboardingIntent.GoToPage(page)) },
             modifier = Modifier.padding(horizontal = 24.dp)
         )
 
@@ -157,8 +137,8 @@ private fun CompactOnboardingLayout(
         OnboardingActions(
             currentPage = uiState.currentPage,
             totalPages = uiState.pages.size,
-            onNextPage = onNextPage,
-            onComplete = onComplete,
+            onNextPage = { onIntent(OnboardingIntent.NextPage) },
+            onComplete = { onIntent(OnboardingIntent.Complete) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 24.dp)
@@ -169,11 +149,7 @@ private fun CompactOnboardingLayout(
 @Composable
 private fun ExpandedOnboardingLayout(
     uiState: OnboardingUiState,
-    onNextPage: () -> Unit,
-    onPreviousPage: () -> Unit,
-    onGoToPage: (Int) -> Unit,
-    onSkip: () -> Unit,
-    onComplete: () -> Unit,
+    onIntent: (OnboardingIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -209,7 +185,7 @@ private fun ExpandedOnboardingLayout(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onSkip) {
+                    TextButton(onClick = { onIntent(OnboardingIntent.Skip) }) {
                         Text(stringResource(CoreResources.ctaSkip))
                     }
                 }
@@ -238,15 +214,15 @@ private fun ExpandedOnboardingLayout(
             PageIndicator(
                 pageCount = uiState.pages.size,
                 currentPage = uiState.currentPage,
-                onPageClick = onGoToPage,
+                onPageClick = { page -> onIntent(OnboardingIntent.GoToPage(page)) },
                 modifier = Modifier.padding(vertical = 24.dp)
             )
 
             OnboardingActions(
                 currentPage = uiState.currentPage,
                 totalPages = uiState.pages.size,
-                onNextPage = onNextPage,
-                onComplete = onComplete,
+                onNextPage = { onIntent(OnboardingIntent.NextPage) },
+                onComplete = { onIntent(OnboardingIntent.Complete) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -433,11 +409,7 @@ fun OnboardingScreenPreview() {
     JKBTheme {
         OnboardingScreenContent(
             uiState = OnboardingUiState(),
-            onNextPage = {},
-            onPreviousPage = {},
-            onGoToPage = {},
-            onSkip = {},
-            onComplete = {}
+            onIntent = {}
         )
     }
 }

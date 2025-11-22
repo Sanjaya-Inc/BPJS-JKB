@@ -35,16 +35,7 @@ fun FraudDetectionScreen(
     val state = viewModel.collectAsState().value
     FraudDetectionScreenContent(
         uiState = state,
-        onNavigateToTab = { viewModel.sendIntent(FraudDetectionIntent.NavigateToTab(it)) },
-        onClaimIdSubmit = { viewModel.sendIntent(FraudDetectionIntent.SubmitClaimId(it)) },
-        onNewClaimSubmit = { hospital, doctor, diagnosis, cost, action ->
-            viewModel.sendIntent(
-                FraudDetectionIntent.SubmitNewClaim(hospital, doctor, diagnosis, cost, action)
-            )
-        },
-        onActorSubmit = { actorType, actorId ->
-            viewModel.sendIntent(FraudDetectionIntent.SubmitActorAnalysis(actorType, actorId))
-        },
+        onIntent = viewModel::sendIntent,
         modifier = modifier
     )
 }
@@ -52,10 +43,7 @@ fun FraudDetectionScreen(
 @Composable
 private fun FraudDetectionScreenContent(
     uiState: FraudDetectionUiState,
-    onNavigateToTab: (FraudDetectionTab) -> Unit,
-    onClaimIdSubmit: (String) -> Unit,
-    onNewClaimSubmit: (String, String, String, String, String) -> Unit,
-    onActorSubmit: (ActorType, String) -> Unit,
+    onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(modifier = modifier) { paddingValues ->
@@ -66,19 +54,13 @@ private fun FraudDetectionScreenContent(
             compactContent = {
                 CompactFraudDetectionLayout(
                     uiState = uiState,
-                    onNavigateToTab = onNavigateToTab,
-                    onClaimIdSubmit = onClaimIdSubmit,
-                    onNewClaimSubmit = onNewClaimSubmit,
-                    onActorSubmit = onActorSubmit
+                    onIntent = onIntent
                 )
             },
             expandedContent = {
                 ExpandedFraudDetectionLayout(
                     uiState = uiState,
-                    onNavigateToTab = onNavigateToTab,
-                    onClaimIdSubmit = onClaimIdSubmit,
-                    onNewClaimSubmit = onNewClaimSubmit,
-                    onActorSubmit = onActorSubmit
+                    onIntent = onIntent
                 )
             }
         )
@@ -88,10 +70,7 @@ private fun FraudDetectionScreenContent(
 @Composable
 private fun CompactFraudDetectionLayout(
     uiState: FraudDetectionUiState,
-    onNavigateToTab: (FraudDetectionTab) -> Unit,
-    onClaimIdSubmit: (String) -> Unit,
-    onNewClaimSubmit: (String, String, String, String, String) -> Unit,
-    onActorSubmit: (ActorType, String) -> Unit,
+    onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -104,17 +83,25 @@ private fun CompactFraudDetectionLayout(
                 FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    onSubmit = onClaimIdSubmit
+                    onIntent = onIntent
                 )
                 FraudDetectionTab.NEW_CLAIM -> NewClaimDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    onSubmit = onNewClaimSubmit
+                    doctors = uiState.doctorsName,
+                    hospitals = uiState.hospitalsName,
+                    isLoadingData = uiState.isLoadingData,
+                    dataError = uiState.dataError,
+                    onIntent = onIntent
                 )
                 FraudDetectionTab.ACTOR -> ActorDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    onSubmit = onActorSubmit
+                    doctors = uiState.doctorsName,
+                    hospitals = uiState.hospitalsName,
+                    isLoadingData = uiState.isLoadingData,
+                    dataError = uiState.dataError,
+                    onIntent = onIntent
                 )
             }
         }
@@ -123,7 +110,7 @@ private fun CompactFraudDetectionLayout(
             FraudDetectionTab.entries.forEach { tab ->
                 NavigationBarItem(
                     selected = uiState.currentTab == tab,
-                    onClick = { onNavigateToTab(tab) },
+                    onClick = { onIntent(FraudDetectionIntent.NavigateToTab(tab)) },
                     icon = {
                         Text(
                             text = tab.icon,
@@ -146,10 +133,7 @@ private fun CompactFraudDetectionLayout(
 @Composable
 private fun ExpandedFraudDetectionLayout(
     uiState: FraudDetectionUiState,
-    onNavigateToTab: (FraudDetectionTab) -> Unit,
-    onClaimIdSubmit: (String) -> Unit,
-    onNewClaimSubmit: (String, String, String, String, String) -> Unit,
-    onActorSubmit: (ActorType, String) -> Unit,
+    onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -163,7 +147,7 @@ private fun ExpandedFraudDetectionLayout(
             FraudDetectionTab.entries.forEach { tab ->
                 NavigationRailItem(
                     selected = uiState.currentTab == tab,
-                    onClick = { onNavigateToTab(tab) },
+                    onClick = { onIntent(FraudDetectionIntent.NavigateToTab(tab)) },
                     icon = {
                         Text(
                             text = tab.icon,
@@ -186,17 +170,25 @@ private fun ExpandedFraudDetectionLayout(
                 FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    onSubmit = onClaimIdSubmit
+                    onIntent = onIntent
                 )
                 FraudDetectionTab.NEW_CLAIM -> NewClaimDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    onSubmit = onNewClaimSubmit
+                    doctors = uiState.doctorsName,
+                    hospitals = uiState.hospitalsName,
+                    isLoadingData = uiState.isLoadingData,
+                    dataError = uiState.dataError,
+                    onIntent = onIntent
                 )
                 FraudDetectionTab.ACTOR -> ActorDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    onSubmit = onActorSubmit
+                    doctors = uiState.doctorsName,
+                    hospitals = uiState.hospitalsName,
+                    isLoadingData = uiState.isLoadingData,
+                    dataError = uiState.dataError,
+                    onIntent = onIntent
                 )
             }
         }
@@ -212,10 +204,7 @@ fun FraudDetectionScreenPreview() {
     JKBTheme {
         FraudDetectionScreenContent(
             uiState = FraudDetectionUiState(),
-            onNavigateToTab = {},
-            onClaimIdSubmit = {},
-            onNewClaimSubmit = { _, _, _, _, _ -> },
-            onActorSubmit = { _, _ -> }
+            onIntent = {}
         )
     }
 }

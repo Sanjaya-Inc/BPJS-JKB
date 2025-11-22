@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
@@ -33,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.healthkathon.jkb.frauddetection.presentation.ActorType
+import io.healthkathon.jkb.frauddetection.presentation.FraudDetectionIntent
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,34 +43,16 @@ import kotlinx.collections.immutable.persistentListOf
 fun ActorDetectionScreen(
     isLoading: Boolean,
     result: String?,
-    onSubmit: (ActorType, String) -> Unit,
+    doctors: PersistentList<String>,
+    hospitals: PersistentList<String>,
+    isLoadingData: Boolean,
+    dataError: String?,
+    onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedActorType by remember { mutableStateOf(ActorType.DOCTOR) }
     var selectedActor by remember { mutableStateOf("") }
     var actorExpanded by remember { mutableStateOf(false) }
-
-    val doctors = listOf(
-        "Ahmad Wijaya, Sp.PD",
-        "Siti Nurhaliza, Sp.A",
-        "Budi Santoso, Sp.B",
-        "Rina Kusuma, Sp.OG",
-        "Hendra Gunawan, Sp.JP",
-        "Dewi Lestari, Sp.M",
-        "Agus Setiawan, Sp.THT",
-        "Maya Sari, Sp.KK"
-    )
-
-    val hospitals = listOf(
-        "RS Harapan Sehat",
-        "RS Mitra Keluarga",
-        "RS Siloam",
-        "RS Hermina",
-        "RSUD Kota",
-        "RS Medika Permata",
-        "RS Graha Medika",
-        "RS Bunda Sejahtera"
-    )
 
     val actorList = if (selectedActorType == ActorType.DOCTOR) doctors else hospitals
     val scrollState = rememberScrollState()
@@ -127,6 +112,9 @@ fun ActorDetectionScreen(
                 onClick = {
                     selectedActorType = ActorType.DOCTOR
                     selectedActor = ""
+                    if (doctors.isEmpty() && !isLoadingData) {
+                        onIntent(FraudDetectionIntent.LoadDoctors)
+                    }
                 },
                 label = { Text("👨‍⚕️ Dokter") },
                 enabled = !isLoading,
@@ -140,6 +128,9 @@ fun ActorDetectionScreen(
                 onClick = {
                     selectedActorType = ActorType.HOSPITAL
                     selectedActor = ""
+                    if (hospitals.isEmpty() && !isLoadingData) {
+                        onIntent(FraudDetectionIntent.LoadHospitals)
+                    }
                 },
                 label = { Text("🏥 Rumah Sakit") },
                 enabled = !isLoading,
@@ -149,35 +140,70 @@ fun ActorDetectionScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        if (dataError != null) {
+            Text(
+                text = dataError,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         ExposedDropdownMenuBox(
             expanded = actorExpanded,
-            onExpandedChange = { actorExpanded = !actorExpanded && !isLoading }
+            onExpandedChange = { actorExpanded = !actorExpanded && !isLoading && !isLoadingData }
         ) {
             OutlinedTextField(
                 value = selectedActor,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(selectedActorType.displayName) },
-                placeholder = { Text("Pilih ${selectedActorType.displayName}") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = actorExpanded) },
+                placeholder = {
+                    Text(
+                        if (isLoadingData) {
+                            "Memuat data..."
+                        } else {
+                            "Pilih ${selectedActorType.displayName}"
+                        }
+                    )
+                },
+                trailingIcon = {
+                    if (isLoadingData) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = actorExpanded)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor(),
-                enabled = !isLoading,
-                shape = RoundedCornerShape(12.dp)
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                enabled = !isLoading && !isLoadingData && actorList.isNotEmpty(),
+                shape = RoundedCornerShape(12.dp),
+                isError = dataError != null
             )
             ExposedDropdownMenu(
                 expanded = actorExpanded,
                 onDismissRequest = { actorExpanded = false }
             ) {
-                actorList.forEach { item ->
+                if (actorList.isEmpty()) {
                     DropdownMenuItem(
-                        text = { Text(item) },
-                        onClick = {
-                            selectedActor = item
-                            actorExpanded = false
-                        }
+                        text = { Text("Tidak ada data") },
+                        onClick = { }
                     )
+                } else {
+                    actorList.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                selectedActor = item
+                                actorExpanded = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -185,7 +211,14 @@ fun ActorDetectionScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { onSubmit(selectedActorType, selectedActor) },
+            onClick = {
+                onIntent(
+                    FraudDetectionIntent.SubmitActorAnalysis(
+                        selectedActorType,
+                        selectedActor
+                    )
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = selectedActor.isNotBlank() && !isLoading,
             shape = RoundedCornerShape(12.dp)

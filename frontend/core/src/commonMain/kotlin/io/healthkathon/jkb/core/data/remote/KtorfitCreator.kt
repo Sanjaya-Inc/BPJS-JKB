@@ -3,6 +3,7 @@ package io.healthkathon.jkb.core.data.remote
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.ContentType
@@ -12,7 +13,7 @@ import org.koin.core.annotation.Single
 
 @Single
 class KtorfitCreator(
-    private val baseUrlProvider: BaseUrlProvider,
+    private val remoteApiConfigProvider: RemoteApiConfigProvider,
     private val apiHttpLogger: ApiHttpLogger,
     private val json: Json
 ) {
@@ -27,8 +28,11 @@ class KtorfitCreator(
                     logger = apiHttpLogger
                     level = LogLevel.ALL
                 }
+                defaultRequest {
+                    headers.append("Content-Type", "application/json")
+                }
             }
-            .baseUrl(baseUrlProvider.getBaseUrl())
+            .baseUrl(remoteApiConfigProvider.getBaseUrl())
             .build()
     }
 }
