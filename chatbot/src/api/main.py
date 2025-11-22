@@ -11,8 +11,9 @@ from typing import Optional, AsyncGenerator
 # Imports
 from chatbot.src.database import db
 from .repository import HealthcareRepository
-from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, QuestionRequest, ChatbotResponse
+from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse
 from .chatbot_service import ChatbotService
+from .claim_verification_service import ClaimVerificationService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -75,6 +76,18 @@ def get_chatbot_service():
         _chatbot_service = ChatbotService()
     return _chatbot_service
 
+# Global claim verification service instance
+_verification_service = None
+
+def get_verification_service():
+    """
+    Creates or returns the singleton claim verification service instance.
+    """
+    global _verification_service
+    if _verification_service is None:
+        _verification_service = ClaimVerificationService()
+    return _verification_service
+
 # --- Routes ---
 
 @app.get("/", tags=["Health"])
@@ -123,3 +136,27 @@ def ask_chatbot(
     """
     result = chatbot_service.process_question(request.question)
     return ChatbotResponse(**result)
+
+@app.post("/claims/verify", response_model=ClaimVerificationResponse, tags=["Claims"])
+def verify_claim(
+    request: ClaimVerificationRequest,
+    verification_service: ClaimVerificationService = Depends(get_verification_service)
+):
+    """
+    Verify a claim for fraud detection using AI-powered medical knowledge graph analysis.
+    
+    This endpoint replicates the functionality from the dani-verify-claim-id.ipynb notebook,
+    implementing the same multi-step validation process:
+    
+    1. Data Retrieval: Fetches claim data from Neo4j knowledge graph
+    2. Validation Logic: 
+       - Procedure consistency check
+       - Cost analysis (20% variance rule)  
+       - Doctor qualification validation
+       - Hospital capability verification
+    3. Final Verdict: Returns FRAUD/NORMAL with confidence score and detailed explanation
+    
+    The validation follows medical rules and allows for reasonable operational variances.
+    """
+    result = verification_service.verify_claim(request.claim_id)
+    return ClaimVerificationResponse(**result)

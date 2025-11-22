@@ -7,8 +7,11 @@ A FastAPI-based REST API for accessing BPJS-JKB data from a Neo4j graph database
 - **GET /hospitals** - Retrieve hospital data with specialties and facilities
 - **GET /doctors** - Retrieve doctor information with hospital associations
 - **GET /claims** - Retrieve claims data with diagnosis and costs
+- **POST /claims/verify** - AI-powered fraud detection for insurance claims
+- **POST /chatbot/ask** - Natural language querying with RAG-enhanced search
 - **Filtering Support** - Query parameters for filtering results
 - **Neo4j Integration** - Direct queries to graph database
+- **AI/ML Integration** - LLM-powered analysis and fraud detection
 - **CSV-like JSON Response** - Simple, predictable response format
 - **Comprehensive Testing** - Full test suite with mocking
 - **Auto Documentation** - OpenAPI/Swagger docs at `/docs`
@@ -180,6 +183,89 @@ curl "http://localhost:8000/claims?doctor_id=DOC001"
       "medical_resume_json": "Acute Myocardial Infarction. Chest pain radiating to left arm."
     }
   ]
+}
+```
+
+### POST /claims/verify
+
+**AI-powered fraud detection for insurance claims.** This endpoint uses machine learning and medical knowledge graph analysis to detect potentially fraudulent claims.
+
+**Request Body:**
+```json
+{
+  "claim_id": "C1043"
+}
+```
+
+**Validation Process:**
+The system performs a multi-step analysis:
+1. **Data Retrieval**: Fetches claim data from the knowledge graph
+2. **Procedure Consistency**: Verifies procedures are appropriate for the diagnosis
+3. **Cost Analysis**: Applies the 20% variance rule for cost validation
+4. **Doctor Qualification**: Validates doctor specialization for the procedure
+5. **Hospital Capability**: Ensures hospital has required facilities
+
+**Example Request:**
+```bash
+curl -X POST "http://localhost:8000/claims/verify" \
+     -H "Content-Type: application/json" \
+     -d '{"claim_id": "C1043"}'
+```
+
+**Example Response:**
+```json
+{
+  "claim_id": "C1043",
+  "validation_result": "FRAUD",
+  "confidence_score": 85,
+  "detail_claim_data": {
+    "patient_name": "John Doe",
+    "hospital_name": "General Hospital",
+    "doctor_name": "Dr. Smith",
+    "diagnosis_name": "Stroke",
+    "total_cost": 15000.0,
+    "procedures": ["MRI Brain", "CT Scan"]
+  },
+  "explanation": "Cost is 25% higher than expected ground truth (12000.0), exceeding the 20% variance threshold. Doctor qualification verified. Hospital has required neurology facilities. Flagged as FRAUD due to cost inflation.",
+  "status": "success"
+}
+```
+
+**Response Fields:**
+- `claim_id`: The verified claim identifier
+- `validation_result`: Either "FRAUD", "NORMAL", or "ERROR"
+- `confidence_score`: Confidence level (0-100%)
+- `detail_claim_data`: Detailed claim information from database
+- `explanation`: Human-readable explanation of the analysis
+- `status`: API response status
+
+### POST /chatbot/ask
+
+Natural language interface for querying the medical database using RAG-enhanced search.
+
+**Request Body:**
+```json
+{
+  "question": "How many stroke cases were treated at RSUP Dr. Hasan Sadikin last month?"
+}
+```
+
+**Example Request:**
+```bash
+curl -X POST "http://localhost:8000/chatbot/ask" \
+     -H "Content-Type: application/json" \
+     -d '{"question": "Show me all cardiologists at Class A hospitals"}'
+```
+
+**Example Response:**
+```json
+{
+  "answer": "Based on the database query, there are 5 cardiologists working at Class A hospitals: Dr. Ahmad (HOS001), Dr. Sari (HOS002)...",
+  "status": "success",
+  "metadata": {
+    "tools_used": 4,
+    "input_question": "Show me all cardiologists at Class A hospitals"
+  }
 }
 ```
 

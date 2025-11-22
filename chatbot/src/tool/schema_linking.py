@@ -12,70 +12,112 @@ class SchemaLinkingTool(BaseTool):
 
     def _run(self, question: str) -> str:
         return """
-        GRAPH DATABASE SCHEMA DEFINITION
-        --------------------------------
-        The database stores medical insurance claims, hospital infrastructure, doctors, and clinical knowledge rules.
+        BPJS GRAPH DATABASE SCHEMA
+        ==========================
+        Enhanced medical insurance claims database with structured medical resume data.
 
-        NODES & PROPERTIES (with Sample Values):
-        1. Claim (from claims_with_resume.csv)
-           - id (String): "C1001"
+        CORE NODES & PROPERTIES:
+        ------------------------
+        
+        1. Claim (Primary Entity)
+           - id (String): "C1001", "C1002"
            - total_cost (Float): 65000000.0
-           - label (String): "NORMAL" (e.g., "NORMAL", "FRAUD")
-           - medical_resume (JSON String): "{\"Patient_Name\": \"Budi Santoso\", ...}" 
+           - status (String): "NORMAL", "FRAUD", null
+           - date (Date): Claim submission date
 
-        2. Hospital (from hospital.csv)
-           - id (String): "HOS001"
+        2. Patient (From medical_resume_json)
+           - name (String): "Budi Santoso", "Siti Aminah"
+           
+        3. Hospital (Infrastructure)
+           - id (String): "HOS001", "HOS002"
            - name (String): "RSUP Dr. Hasan Sadikin (RSHS)"
            - class (String): "Class A (National Referral)"
-           - location (Point): point({latitude: -6.898169, longitude: 107.598406})
-           - specialties (List<String>): ["Cardiology", "Oncology", ...]
-           - facilities (List<String>): ["ICU", "NICU", "929 Beds", ...]
+           - location (Point): Geospatial coordinates
 
-        3. Doctor (from doctors.csv)
-           - id (String): "DOC001"
+        4. Doctor (Medical Staff)
+           - id (String): "DOC001", "DOC002"  
            - name (String): "Dr. Budi Hartono"
-           - specialization (String): "Cardiologist"
+           - specialization (String): "Cardiologist", "Surgeon"
 
-        4. Diagnosis (ICD-10) (from master_diagnoses.csv)
-           - code (String): "I21.9"
-           - name (String): "Acute Myocardial Infarction (Heart Attack)"
-           - avg_cost (Float): 65000000.0
-           - severity (String): "High"
+        5. Diagnosis (ICD-10 Codes)
+           - code (String): "I21.9", "K35.80", "A90"
+           - name (String): "Acute Myocardial Infarction"
+           - avg_cost (Float): Expected treatment cost
+           - severity (String): "High", "Medium", "Low"
 
-        5. Procedure (from master_procedure.csv)
-           - code (String): "89.52"
-           - name (String): "EKG (Electrocardiogram)"
-           - avg_cost (Float): 175000.0
+        6. Procedure (Medical Procedures)
+           - code (String): "89.52", "37.22", "UNCODIFIED"
+           - name (String): "PCI (Angiography/Stent)", "IV Heparin"
+           - avg_cost (Float): Procedure cost
+           * UNCODIFIED: New procedures from medical resume text
 
-        6. ClinicalNote (Extracted from Claim.medical_resume)
-           - text_raw (String): "Severe chest pain >3 hrs..."
-           - primary_diagnosis_text (String): "Acute Myocardial Infarction"
+        7. ClinicalNote (Medical Documentation)
+           - primary_diagnosis_text (String): Clinical primary diagnosis
+           - secondary_diagnosis_text (String): Supporting clinical findings
 
-        7. Specialty
-           - name (String): "Cardiology"
+        8. Specialty (Hospital Capabilities)
+           - name (String): "Cardiology", "Oncology"
 
-        8. Facility
-           - name (String): "ICU"
+        9. Facility (Hospital Equipment)
+           - name (String): "ICU", "CT Scan", "MRI"
 
-        RELATIONSHIP PATHS:
-        -------------------
-        1. Transactional (Claim History):
-           (:Claim)-[:SUBMITTED_AT]->(:Hospital)  // via hospital_id
-           (:Claim)-[:SUBMITTED_BY]->(:Doctor)    // via doctor_id
-           (:Claim)-[:CODED_AS]->(:Diagnosis)     // via diagnosis (ICD-10 code)
-           (:Claim)-[:INCLUDES_PROCEDURE]->(:Procedure) // via procedure code
+        RELATIONSHIP STRUCTURE:
+        ----------------------
+        
+        CLAIM RELATIONSHIPS:
+        (:Claim)-[:SUBMITTED_AT]->(:Hospital)           // Where claim filed
+        (:Claim)-[:SUBMITTED_BY]->(:Doctor)             // Submitting doctor
+        (:Claim)-[:CODED_AS]->(:Diagnosis)              // Primary ICD-10 code
+        (:Claim)-[:HAS_PATIENT]->(:Patient)             // Patient info
+        (:Claim)-[:HAS_PRIMARY_PROCEDURE]->(:Procedure) // Main procedures
+        (:Claim)-[:HAS_SECONDARY_PROCEDURE]->(:Procedure) // Support procedures
+        (:Claim)-[:HAS_CLINICAL_NOTE]->(:ClinicalNote)  // Clinical docs
 
-        2. Infrastructure:
-           (:Doctor)-[:WORKS_AT]->(:Hospital)     // via primary_hospital_id
-           (:Hospital)-[:HAS_SPECIALTY]->(:Specialty) // parsed from specialties_json
-           (:Hospital)-[:HAS_FACILITY]->(:Facility)   // parsed from facilities_json
+        INFRASTRUCTURE:
+        (:Doctor)-[:WORKS_AT]->(:Hospital)
+        (:Hospital)-[:HAS_SPECIALTY]->(:Specialty)
+        (:Hospital)-[:HAS_FACILITY]->(:Facility)
 
-        3. Medical Rules (Knowledge Graph from knowledge_rules.csv):
-           (:Diagnosis)-[:REQUIRES]->(:Procedure)            // e.g., I21.9 REQUIRES 89.52
-           (:Diagnosis)-[:TYPICALLY_TREATED_WITH]->(:Procedure) // e.g., I21.9 TYPICALLY_TREATED_WITH 37.22
+        MEDICAL RULES:
+        (:Diagnosis)-[:REQUIRES]->(:Procedure)
+        (:Diagnosis)-[:TYPICALLY_TREATED_WITH]->(:Procedure)
 
-        4. Evidence Trail (Unstructured Data):
-           (:Claim)-[:HAS_CLINICAL_NOTE]->(:ClinicalNote)
-           (:ClinicalNote)-[:MENTIONS]->(:Diagnosis) // Extracted entity linking
-           (:ClinicalNote)-[:MENTIONS]->(:Procedure) // Extracted entity linking
+        KEY QUERIES FOR MEDICAL RESUME DATA:
+        -----------------------------------
+        
+        1. GET COMPLETE MEDICAL RESUME FOR CLAIM:
+        MATCH (c:Claim {id: "C1001"})
+        OPTIONAL MATCH (c)-[:HAS_PATIENT]->(patient:Patient)
+        OPTIONAL MATCH (c)-[:HAS_PRIMARY_PROCEDURE]->(pp:Procedure)
+        OPTIONAL MATCH (c)-[:HAS_SECONDARY_PROCEDURE]->(sp:Procedure)  
+        OPTIONAL MATCH (c)-[:HAS_CLINICAL_NOTE]->(note:ClinicalNote)
+        OPTIONAL MATCH (c)-[:SUBMITTED_AT]->(hospital:Hospital)
+        OPTIONAL MATCH (c)-[:SUBMITTED_BY]->(doctor:Doctor)
+        OPTIONAL MATCH (c)-[:CODED_AS]->(diagnosis:Diagnosis)
+        RETURN c.id, c.total_cost, c.status,
+               patient.name as patient_name,
+               hospital.name as hospital_name,
+               doctor.name as doctor_name,
+               diagnosis.name as diagnosis_name,
+               collect(DISTINCT pp.name) as primary_procedures,
+               collect(DISTINCT sp.name) as secondary_procedures,
+               note.primary_diagnosis_text,
+               note.secondary_diagnosis_text
+
+        2. GET ALL PROCEDURES (PRIMARY + SECONDARY):
+        MATCH (c:Claim {id: "C1001"})-[r:HAS_PRIMARY_PROCEDURE|HAS_SECONDARY_PROCEDURE]->(p:Procedure)
+        RETURN type(r) as procedure_type, p.name, p.code, p.avg_cost
+        ORDER BY procedure_type, p.name
+
+        3. FIND CLAIMS BY PROCEDURE:
+        MATCH (c:Claim)-[r:HAS_PRIMARY_PROCEDURE|HAS_SECONDARY_PROCEDURE]->(p:Procedure)
+        WHERE p.name CONTAINS "PCI"
+        RETURN c.id, c.status, type(r) as procedure_type, p.name
+
+        4. MEDICAL COMPLIANCE CHECK:
+        MATCH (c:Claim)-[:CODED_AS]->(d:Diagnosis)
+        MATCH (c)-[:HAS_PRIMARY_PROCEDURE]->(actual:Procedure)
+        OPTIONAL MATCH (d)-[:REQUIRES]->(required:Procedure)
+        RETURN c.id, d.name, actual.name, required.name
+        WHERE required IS NOT NULL AND actual.name <> required.name
         """

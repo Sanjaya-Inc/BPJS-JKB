@@ -1,6 +1,9 @@
 import pandas as pd
 import json
 from neo4j import GraphDatabase
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.config import NEO4J_URI, NEO4J_AUTH
 
 URI = NEO4J_URI
@@ -33,7 +36,8 @@ class BPJSGraphLoader:
             "CREATE CONSTRAINT IF NOT EXISTS FOR (d:Doctor) REQUIRE d.id IS UNIQUE",
             "CREATE CONSTRAINT IF NOT EXISTS FOR (diag:Diagnosis) REQUIRE diag.code IS UNIQUE",
             "CREATE CONSTRAINT IF NOT EXISTS FOR (p:Procedure) REQUIRE p.code IS UNIQUE",
-            "CREATE CONSTRAINT IF NOT EXISTS FOR (c:Claim) REQUIRE c.id IS UNIQUE"
+            "CREATE CONSTRAINT IF NOT EXISTS FOR (c:Claim) REQUIRE c.id IS UNIQUE",
+            "CREATE CONSTRAINT IF NOT EXISTS FOR (patient:Patient) REQUIRE patient.name IS UNIQUE"
         ]
         with self.driver.session() as session:
             for q in queries:
@@ -141,8 +145,8 @@ class BPJSGraphLoader:
         print(f"   - Loaded {len(df_hos)} Hospitals and {len(df_doc)} Doctors.")
 
     def load_claims_and_resume(self):
-        """Loads Claims and parses the NEW Nested Clinical Resume JSON"""
-        print("📄 Loading Claims and Clinical Evidence...")
+        """Loads Claims with structured Medical Resume data"""
+        print("📄 Loading Claims and Medical Resume Evidence...")
         
         df_claims = pd.read_csv(FILES["claims"])
         
@@ -168,7 +172,7 @@ class BPJSGraphLoader:
                 """, cid=row['claim_id'], hid=row['hospital_id'], 
                    did=row['doctor_id'], code=row['diagnosis'])
 
-                # 3. Parse NEW Nested Clinical Resume JSON
+                # 3. Parse Medical Resume JSON and Create Structured Data
                 try:
                     resume_root = json.loads(row['medical_resume_json'])
                     
@@ -181,45 +185,84 @@ class BPJSGraphLoader:
                     # Extract Fields
                     patient_name = data.get("Patient_Name", "Unknown")
                     primary_diag = data.get("Primary_Diagnosis", "")
-                    notes_text = data.get("Secondary_Diagnosis", "") # Using Sec Diag as "Notes/Findings"
-                    
-                    # Combine Primary and Secondary Procedures for evidence linking
-                    proc_list = data.get("Primary_Procedure", []) + data.get("Secondary_Procedures", [])
+                    secondary_diag = data.get("Secondary_Diagnosis", "")
+                    primary_procedures = data.get("Primary_Procedure", [])
+                    secondary_procedures = data.get("Secondary_Procedures", [])
 
-                    # Create Clinical Note Node
+                    # 4. Create Patient Node and Link to Claim
+                    session.run("""
+                        MATCH (c:Claim {id: $cid})
+                        MERGE (p:Patient {name: $patient_name})
+                        MERGE (c)-[:HAS_PATIENT]->(p)
+                    """, cid=row['claim_id'], patient_name=patient_name)
+
+                    # 5. Create Clinical Note with Diagnosis Information
                     session.run("""
                         MATCH (c:Claim {id: $cid})
                         CREATE (n:ClinicalNote)
-                        SET n.patient_name = $pat_name,
-                            n.primary_diagnosis_text = $prim_diag,
-                            n.text_raw = $notes
+                        SET n.primary_diagnosis_text = $primary_diag,
+                            n.secondary_diagnosis_text = $secondary_diag
                         CREATE (c)-[:HAS_CLINICAL_NOTE]->(n)
-                    """, cid=row['claim_id'], pat_name=patient_name, 
-                         prim_diag=primary_diag, notes=notes_text)
+                    """, cid=row['claim_id'], primary_diag=primary_diag, secondary_diag=secondary_diag)
 
-                    # 4. Link Procedure Text to Ontology
-                    # We iterate through the list of procedure strings found in the JSON
-                    for proc_str in proc_list:
-                        session.run("""
-                            MATCH (c:Claim {id: $cid})-[:HAS_CLINICAL_NOTE]->(n:ClinicalNote)
-                            
-                            // Create Entity node for the specific text found in the resume
-                            CREATE (e:MentionedEntity {text: $p_text, type: 'Procedure'})
-                            CREATE (n)-[:MENTIONS]->(e)
-                            
-                            // Fuzzy Match to Standardized Procedure
-                            // (Finds a Procedure where the name is inside the text, or text inside the name)
-                            WITH e
+                    # 6. Link PRIMARY Procedures to Claim
+                    for proc_text in primary_procedures:
+                        # First, try to find existing procedure by exact name match
+                        result = session.run("""
                             MATCH (p:Procedure)
-                            WHERE toLower(e.text) CONTAINS toLower(p.name) 
-                               OR toLower(p.name) CONTAINS toLower(e.text)
-                            MERGE (e)-[:MAPS_TO]->(p)
-                        """, cid=row['claim_id'], p_text=proc_str)
+                            WHERE toLower(p.name) = toLower($proc_text)
+                            RETURN p.name as name, p.code as code LIMIT 1
+                        """, proc_text=proc_text)
+                        
+                        existing_proc = result.single()
+                        if existing_proc:
+                            # Link to existing procedure
+                            session.run("""
+                                MATCH (c:Claim {id: $cid})
+                                MATCH (p:Procedure {name: $proc_name})
+                                MERGE (c)-[:HAS_PRIMARY_PROCEDURE]->(p)
+                            """, cid=row['claim_id'], proc_name=existing_proc['name'])
+                        else:
+                            # Create new procedure node with unique code based on name
+                            unique_code = f"UNCODIFIED_{hash(proc_text) % 100000:05d}"
+                            session.run("""
+                                MATCH (c:Claim {id: $cid})
+                                MERGE (p:Procedure {name: $proc_text})
+                                ON CREATE SET p.code = $unique_code, p.avg_cost = 0.0
+                                MERGE (c)-[:HAS_PRIMARY_PROCEDURE]->(p)
+                            """, cid=row['claim_id'], proc_text=proc_text, unique_code=unique_code)
+
+                    # 7. Link SECONDARY Procedures to Claim
+                    for proc_text in secondary_procedures:
+                        # First, try to find existing procedure by exact name match
+                        result = session.run("""
+                            MATCH (p:Procedure)
+                            WHERE toLower(p.name) = toLower($proc_text)
+                            RETURN p.name as name, p.code as code LIMIT 1
+                        """, proc_text=proc_text)
+                        
+                        existing_proc = result.single()
+                        if existing_proc:
+                            # Link to existing procedure
+                            session.run("""
+                                MATCH (c:Claim {id: $cid})
+                                MATCH (p:Procedure {name: $proc_name})
+                                MERGE (c)-[:HAS_SECONDARY_PROCEDURE]->(p)
+                            """, cid=row['claim_id'], proc_name=existing_proc['name'])
+                        else:
+                            # Create new procedure node with unique code based on name
+                            unique_code = f"UNCODIFIED_{hash(proc_text) % 100000:05d}"
+                            session.run("""
+                                MATCH (c:Claim {id: $cid})
+                                MERGE (p:Procedure {name: $proc_text})
+                                ON CREATE SET p.code = $unique_code, p.avg_cost = 0.0
+                                MERGE (c)-[:HAS_SECONDARY_PROCEDURE]->(p)
+                            """, cid=row['claim_id'], proc_text=proc_text, unique_code=unique_code)
 
                 except Exception as e:
                     print(f"⚠️ Error parsing JSON for Claim {row['claim_id']}: {e}")
 
-        print(f"   - Loaded {len(df_claims)} Claims with Evidence.")
+        print(f"   - Loaded {len(df_claims)} Claims with Full Medical Resume Structure.")
 
 # ---------------- EXECUTION ----------------
 if __name__ == "__main__":

@@ -45,3 +45,15 @@ class ChatbotResponse(BaseModel):
     answer: str = Field(..., description="Processed answer from the chatbot")
     status: str = Field(default="success", description="Response status")
     metadata: Optional[dict] = Field(default=None, description="Additional metadata from processing")
+
+# Claim Verification schemas
+class ClaimVerificationRequest(BaseModel):
+    claim_id: str = Field(..., description="The claim ID to verify", min_length=1)
+
+class ClaimVerificationResponse(BaseModel):
+    claim_id: str = Field(..., description="The verified claim ID")
+    validation_result: str = Field(..., description="Validation result: FRAUD or NORMAL")
+    confidence_score: int = Field(..., description="Confidence score between 0-100%")
+    detail_claim_data: dict = Field(..., description="Detailed claim data from the database")
+    explanation: str = Field(..., description="Detailed explanation of the validation")
+    status: str = Field(default="success", description="Response status")
