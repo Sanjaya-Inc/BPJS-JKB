@@ -7,6 +7,8 @@ import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimsResponse
+import io.healthkathon.jkb.frauddetection.data.model.DiagnosisData
+import io.healthkathon.jkb.frauddetection.data.model.DiagnosisResponse
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.DoctorResponse
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
@@ -143,6 +145,174 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
                 )
             )
         )
+    }
+
+    override suspend fun getDiagnoses(
+        severityLevel: String?,
+        icd10Code: String?,
+        name: String?,
+        minCost: Double?,
+        maxCost: Double?
+    ): DiagnosisResponse {
+        delay(800)
+
+        val allDiagnoses = listOf(
+            DiagnosisData(
+                diagnosisId = "DX001",
+                icd10Code = "E11",
+                name = "Diabetes Mellitus Type 2",
+                avgCost = 13200000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX002",
+                icd10Code = "J20",
+                name = "Acute Bronchitis",
+                avgCost = 3250000.0,
+                severityLevel = "Low"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX003",
+                icd10Code = "K35",
+                name = "Appendicitis",
+                avgCost = 28500000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX004",
+                icd10Code = "I25",
+                name = "Coronary Artery Disease",
+                avgCost = 51000000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX005",
+                icd10Code = "O80",
+                name = "Normal Delivery",
+                avgCost = 8500000.0,
+                severityLevel = "Medium"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX006",
+                icd10Code = "I10",
+                name = "Hypertension",
+                avgCost = 4200000.0,
+                severityLevel = "Medium"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX007",
+                icd10Code = "H25",
+                name = "Cataract",
+                avgCost = 15000000.0,
+                severityLevel = "Medium"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX008",
+                icd10Code = "J32",
+                name = "Chronic Sinusitis",
+                avgCost = 4200000.0,
+                severityLevel = "Low"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX009",
+                icd10Code = "S72",
+                name = "Fracture of Femur",
+                avgCost = 45000000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX010",
+                icd10Code = "L20",
+                name = "Atopic Dermatitis (Eczema)",
+                avgCost = 1500000.0,
+                severityLevel = "Low"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX011",
+                icd10Code = "J18",
+                name = "Pneumonia",
+                avgCost = 18500000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX012",
+                icd10Code = "K29",
+                name = "Gastritis",
+                avgCost = 2800000.0,
+                severityLevel = "Low"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX013",
+                icd10Code = "M54",
+                name = "Dorsalgia (Back Pain)",
+                avgCost = 3500000.0,
+                severityLevel = "Low"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX014",
+                icd10Code = "N18",
+                name = "Chronic Kidney Disease",
+                avgCost = 65000000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX015",
+                icd10Code = "I21",
+                name = "Acute Myocardial Infarction",
+                avgCost = 95000000.0,
+                severityLevel = "High"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX016",
+                icd10Code = "A09",
+                name = "Gastroenteritis",
+                avgCost = 2500000.0,
+                severityLevel = "Low"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX017",
+                icd10Code = "O82",
+                name = "Cesarean Section",
+                avgCost = 18000000.0,
+                severityLevel = "Medium"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX018",
+                icd10Code = "E78",
+                name = "Hyperlipidemia",
+                avgCost = 3800000.0,
+                severityLevel = "Medium"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX019",
+                icd10Code = "J45",
+                name = "Asthma",
+                avgCost = 5200000.0,
+                severityLevel = "Medium"
+            ),
+            DiagnosisData(
+                diagnosisId = "DX020",
+                icd10Code = "I63",
+                name = "Cerebral Infarction (Stroke)",
+                avgCost = 78000000.0,
+                severityLevel = "High"
+            )
+        )
+
+        val filteredDiagnoses = allDiagnoses.filter { diagnosis ->
+            val severityMatch = severityLevel == null ||
+                diagnosis.severityLevel.equals(severityLevel, ignoreCase = true)
+            val icd10Match = icd10Code == null ||
+                diagnosis.icd10Code.contains(icd10Code, ignoreCase = true)
+            val nameMatch = name == null ||
+                diagnosis.name.contains(name, ignoreCase = true)
+            val minCostMatch = minCost == null || diagnosis.avgCost >= minCost
+            val maxCostMatch = maxCost == null || diagnosis.avgCost <= maxCost
+
+            severityMatch && icd10Match && nameMatch && minCostMatch && maxCostMatch
+        }
+
+        return DiagnosisResponse(data = filteredDiagnoses)
     }
 
     override suspend fun checkByClaimId(claimCheckRequest: ClaimCheckRequest): ClaimCheckAnswerData {

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 class NewClaimFormState(
     initialHospitalId: String = "",
     initialDoctorId: String = "",
+    initialDiagnosisDisplay: String = "",
     initialDiagnosisId: String = "",
     initialTotalCost: String = "",
     initialPrimaryProcedure: String = "",
@@ -21,6 +22,7 @@ class NewClaimFormState(
 ) {
     var hospitalId by mutableStateOf(initialHospitalId)
     var doctorId by mutableStateOf(initialDoctorId)
+    var diagnosisDisplay by mutableStateOf(initialDiagnosisDisplay)
     var diagnosisId by mutableStateOf(initialDiagnosisId)
 
     private var totalCostRaw by mutableStateOf(initialTotalCost)
@@ -38,6 +40,7 @@ class NewClaimFormState(
 
     var hospitalExpanded by mutableStateOf(false)
     var doctorExpanded by mutableStateOf(false)
+    var diagnosisExpanded by mutableStateOf(false)
 
     val totalCostValue: String
         get() = totalCostRaw
@@ -45,6 +48,7 @@ class NewClaimFormState(
     val isFormValid: Boolean
         get() = hospitalId.isNotBlank() &&
             doctorId.isNotBlank() &&
+            diagnosisDisplay.isNotBlank() &&
             diagnosisId.isNotBlank() &&
             totalCostRaw.isNotBlank() &&
             primaryProcedure.isNotBlank() &&
@@ -103,6 +107,7 @@ class NewClaimFormState(
     fun reset() {
         hospitalId = ""
         doctorId = ""
+        diagnosisDisplay = ""
         diagnosisId = ""
         totalCostRaw = ""
         totalCostField = TextFieldValue("")
@@ -111,6 +116,7 @@ class NewClaimFormState(
         diagnosisText = ""
         hospitalExpanded = false
         doctorExpanded = false
+        diagnosisExpanded = false
     }
 }
 
@@ -118,6 +124,7 @@ class NewClaimFormState(
 fun rememberNewClaimFormState(
     initialHospitalId: String = "",
     initialDoctorId: String = "",
+    initialDiagnosisDisplay: String = "",
     initialDiagnosisId: String = "",
     initialTotalCost: String = "",
     initialPrimaryProcedure: String = "",
@@ -127,6 +134,7 @@ fun rememberNewClaimFormState(
     NewClaimFormState(
         initialHospitalId,
         initialDoctorId,
+        initialDiagnosisDisplay,
         initialDiagnosisId,
         initialTotalCost,
         initialPrimaryProcedure,

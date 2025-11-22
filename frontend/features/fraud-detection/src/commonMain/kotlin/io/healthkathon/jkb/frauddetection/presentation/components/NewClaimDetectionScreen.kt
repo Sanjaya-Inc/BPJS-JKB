@@ -37,6 +37,8 @@ fun NewClaimDetectionScreen(
     result: String?,
     doctors: PersistentList<String>,
     hospitals: PersistentList<String>,
+    diagnoses: PersistentList<String>,
+    diagnosesIds: PersistentList<String>,
     claims: PersistentList<String>,
     isLoadingData: Boolean,
     dataError: String?,
@@ -225,16 +227,69 @@ fun NewClaimDetectionScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = formState.diagnosisId,
-            onValueChange = { formState.diagnosisId = it },
-            label = { Text("Diagnosis ID") },
-            placeholder = { Text("Contoh: I63, E11, J18") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp)
-        )
+        ExposedDropdownMenuBox(
+            expanded = formState.diagnosisExpanded,
+            onExpandedChange = {
+                if (!formState.diagnosisExpanded && diagnoses.isEmpty() && !isLoadingData) {
+                    onIntent(FraudDetectionIntent.LoadDiagnoses)
+                }
+                formState.diagnosisExpanded = !formState.diagnosisExpanded && !isLoading && !isLoadingData
+            }
+        ) {
+            OutlinedTextField(
+                value = formState.diagnosisDisplay,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Diagnosis") },
+                placeholder = {
+                    Text(
+                        if (isLoadingData) {
+                            "Memuat data..."
+                        } else {
+                            "Pilih Diagnosis"
+                        }
+                    )
+                },
+                trailingIcon = {
+                    if (isLoadingData && diagnoses.isEmpty()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.diagnosisExpanded)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                enabled = !isLoading && !isLoadingData && diagnoses.isNotEmpty(),
+                shape = RoundedCornerShape(12.dp),
+                isError = dataError != null
+            )
+            ExposedDropdownMenu(
+                expanded = formState.diagnosisExpanded,
+                onDismissRequest = { formState.diagnosisExpanded = false }
+            ) {
+                if (diagnoses.isEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("Tidak ada data") },
+                        onClick = { }
+                    )
+                } else {
+                    diagnoses.forEachIndexed { index, item ->
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                formState.diagnosisDisplay = item
+                                formState.diagnosisId = diagnosesIds.getOrNull(index) ?: ""
+                                formState.diagnosisExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

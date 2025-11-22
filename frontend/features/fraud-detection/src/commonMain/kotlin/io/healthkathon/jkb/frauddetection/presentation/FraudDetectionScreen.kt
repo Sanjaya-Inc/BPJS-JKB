@@ -23,6 +23,7 @@ import io.healthkathon.jkb.core.presentation.theme.JKBTheme
 import io.healthkathon.jkb.frauddetection.presentation.components.ClaimIdDetectionScreen
 import io.healthkathon.jkb.frauddetection.presentation.components.NewClaimDetectionScreen
 import io.healthkathon.jkb.frauddetection.presentation.components.ActorDetectionScreen
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
 import org.orbitmvi.orbit.compose.collectAsState
@@ -97,6 +98,8 @@ private fun CompactFraudDetectionLayout(
                     feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
+                    diagnoses = uiState.diagnosesDisplay,
+                    diagnosesIds = uiState.diagnoses.map { it.diagnosisId }.toPersistentList(),
                     claims = uiState.claimsIds,
                     isLoadingData = uiState.isLoadingData,
                     dataError = uiState.dataError,
@@ -193,6 +196,8 @@ private fun ExpandedFraudDetectionLayout(
                     feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
+                    diagnoses = uiState.diagnosesDisplay,
+                    diagnosesIds = uiState.diagnoses.map { it.diagnosisId }.toPersistentList(),
                     claims = uiState.claimsIds,
                     isLoadingData = uiState.isLoadingData,
                     dataError = uiState.dataError,

@@ -7,6 +7,7 @@ import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckAnswerData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimFeedbackRequest
+import io.healthkathon.jkb.frauddetection.data.model.DiagnosisData
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
@@ -30,6 +31,25 @@ class FraudDetectionRepository(
     suspend fun getHospitals(): Result<PersistentList<HospitalData>> {
         return remoteApi.runCatching {
             getHospitals().data?.filterNotNull()?.toPersistentList()
+                ?: persistentListOf()
+        }
+    }
+
+    suspend fun getDiagnoses(
+        severityLevel: String? = null,
+        icd10Code: String? = null,
+        name: String? = null,
+        minCost: Double? = null,
+        maxCost: Double? = null
+    ): Result<PersistentList<DiagnosisData>> {
+        return remoteApi.runCatching {
+            getDiagnoses(
+                severityLevel = severityLevel,
+                icd10Code = icd10Code,
+                name = name,
+                minCost = minCost,
+                maxCost = maxCost
+            ).data?.filterNotNull()?.toPersistentList()
                 ?: persistentListOf()
         }
     }

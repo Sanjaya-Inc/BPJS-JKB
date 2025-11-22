@@ -1,6 +1,8 @@
 package io.healthkathon.jkb.frauddetection.presentation
 
 import io.healthkathon.jkb.core.presentation.utils.BaseViewModel
+import io.healthkathon.jkb.frauddetection.data.model.ClaimData
+import io.healthkathon.jkb.frauddetection.data.model.DiagnosisData
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.domain.FraudDetectionRepository
@@ -15,8 +17,9 @@ data class FraudDetectionUiState(
     val result: String? = null,
     val hospitals: PersistentList<HospitalData> = persistentListOf(),
     val doctors: PersistentList<DoctorData> = persistentListOf(),
-    val claims: PersistentList<io.healthkathon.jkb.frauddetection.data.model.ClaimData> = persistentListOf(),
-    val filteredClaims: PersistentList<io.healthkathon.jkb.frauddetection.data.model.ClaimData> = persistentListOf(),
+    val diagnoses: PersistentList<DiagnosisData> = persistentListOf(),
+    val claims: PersistentList<ClaimData> = persistentListOf(),
+    val filteredClaims: PersistentList<ClaimData> = persistentListOf(),
     val selectedClaimId: String? = null,
     val searchQuery: String = "",
     val isLoadingData: Boolean = false,
@@ -28,6 +31,7 @@ data class FraudDetectionUiState(
 ) {
     val hospitalsName get() = hospitals.mapNotNull { it.name }.toPersistentList()
     val doctorsName get() = doctors.mapNotNull { it.name }.toPersistentList()
+    val diagnosesDisplay get() = diagnoses.map { "${it.name} (${it.icd10Code})" }.toPersistentList()
     val claimsIds get() = claims.map { it.claimId }.toPersistentList()
 }
 
@@ -60,6 +64,7 @@ sealed interface FraudDetectionIntent {
     data class SubmitActorAnalysis(val actorType: ActorType, val actorId: String) : FraudDetectionIntent
     data object LoadHospitals : FraudDetectionIntent
     data object LoadDoctors : FraudDetectionIntent
+    data object LoadDiagnoses : FraudDetectionIntent
     data object LoadClaims : FraudDetectionIntent
     data class SubmitFeedback(val isLike: Boolean) : FraudDetectionIntent
 }
@@ -92,6 +97,7 @@ class FraudDetectionViewModel(
             )
             is FraudDetectionIntent.LoadHospitals -> loadHospitals()
             is FraudDetectionIntent.LoadDoctors -> loadDoctors()
+            is FraudDetectionIntent.LoadDiagnoses -> loadDiagnoses()
             is FraudDetectionIntent.LoadClaims -> loadClaims()
             is FraudDetectionIntent.SubmitFeedback -> submitFeedback(intent.isLike)
         }
@@ -126,6 +132,23 @@ class FraudDetectionViewModel(
                     state.copy(
                         isLoadingData = false,
                         dataError = "Gagal memuat data dokter: ${error.message}"
+                    )
+                }
+            }
+    }
+
+    private fun loadDiagnoses() = intent {
+        reduce { state.copy(isLoadingData = true, dataError = null) }
+
+        repository.getDiagnoses()
+            .onSuccess { diagnoses ->
+                reduce { state.copy(diagnoses = diagnoses, isLoadingData = false) }
+            }
+            .onFailure { error ->
+                reduce {
+                    state.copy(
+                        isLoadingData = false,
+                        dataError = "Gagal memuat data diagnosis: ${error.message}"
                     )
                 }
             }
@@ -349,7 +372,7 @@ ${response.explanation}
                         reduce { state.copy(feedbackGiven = true) }
                     }
                     .onFailure {
-                        // Silent fail for feedback
+                        reduce { state.copy(feedbackGiven = true) }
                     }
             }
             FraudDetectionTab.ACTOR -> {
@@ -360,7 +383,7 @@ ${response.explanation}
                         reduce { state.copy(feedbackGiven = true) }
                     }
                     .onFailure {
-                        // Silent fail for feedback
+                        reduce { state.copy(feedbackGiven = true) }
                     }
             }
         }
