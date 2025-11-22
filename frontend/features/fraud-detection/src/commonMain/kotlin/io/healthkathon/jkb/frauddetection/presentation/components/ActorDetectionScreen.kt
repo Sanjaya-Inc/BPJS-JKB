@@ -26,8 +26,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +48,8 @@ fun ActorDetectionScreen(
     onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedActorType by remember { mutableStateOf(ActorType.DOCTOR) }
-    var selectedActor by remember { mutableStateOf("") }
-    var actorExpanded by remember { mutableStateOf(false) }
-
-    val actorList = if (selectedActorType == ActorType.DOCTOR) doctors else hospitals
+    val formState = rememberActorAnalysisFormState()
+    val actorList = if (formState.selectedActorType == ActorType.DOCTOR) doctors else hospitals
     val scrollState = rememberScrollState()
 
     Column(
@@ -108,10 +103,9 @@ fun ActorDetectionScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             FilterChip(
-                selected = selectedActorType == ActorType.DOCTOR,
+                selected = formState.selectedActorType == ActorType.DOCTOR,
                 onClick = {
-                    selectedActorType = ActorType.DOCTOR
-                    selectedActor = ""
+                    formState.changeActorType(ActorType.DOCTOR)
                     if (doctors.isEmpty() && !isLoadingData) {
                         onIntent(FraudDetectionIntent.LoadDoctors)
                     }
@@ -124,10 +118,9 @@ fun ActorDetectionScreen(
             Spacer(modifier = Modifier.width(12.dp))
 
             FilterChip(
-                selected = selectedActorType == ActorType.HOSPITAL,
+                selected = formState.selectedActorType == ActorType.HOSPITAL,
                 onClick = {
-                    selectedActorType = ActorType.HOSPITAL
-                    selectedActor = ""
+                    formState.changeActorType(ActorType.HOSPITAL)
                     if (hospitals.isEmpty() && !isLoadingData) {
                         onIntent(FraudDetectionIntent.LoadHospitals)
                     }
@@ -151,20 +144,29 @@ fun ActorDetectionScreen(
         }
 
         ExposedDropdownMenuBox(
-            expanded = actorExpanded,
-            onExpandedChange = { actorExpanded = !actorExpanded && !isLoading && !isLoadingData }
+            expanded = formState.actorExpanded,
+            onExpandedChange = {
+                if (!formState.actorExpanded && actorList.isEmpty() && !isLoadingData) {
+                    if (formState.selectedActorType == ActorType.DOCTOR) {
+                        onIntent(FraudDetectionIntent.LoadDoctors)
+                    } else {
+                        onIntent(FraudDetectionIntent.LoadHospitals)
+                    }
+                }
+                formState.actorExpanded = !formState.actorExpanded && !isLoading && !isLoadingData
+            }
         ) {
             OutlinedTextField(
-                value = selectedActor,
+                value = formState.selectedActor,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text(selectedActorType.displayName) },
+                label = { Text(formState.selectedActorType.displayName) },
                 placeholder = {
                     Text(
                         if (isLoadingData) {
                             "Memuat data..."
                         } else {
-                            "Pilih ${selectedActorType.displayName}"
+                            "Pilih ${formState.selectedActorType.displayName}"
                         }
                     )
                 },
@@ -175,7 +177,7 @@ fun ActorDetectionScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = actorExpanded)
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.actorExpanded)
                     }
                 },
                 modifier = Modifier
@@ -186,8 +188,8 @@ fun ActorDetectionScreen(
                 isError = dataError != null
             )
             ExposedDropdownMenu(
-                expanded = actorExpanded,
-                onDismissRequest = { actorExpanded = false }
+                expanded = formState.actorExpanded,
+                onDismissRequest = { formState.actorExpanded = false }
             ) {
                 if (actorList.isEmpty()) {
                     DropdownMenuItem(
@@ -199,8 +201,8 @@ fun ActorDetectionScreen(
                         DropdownMenuItem(
                             text = { Text(item) },
                             onClick = {
-                                selectedActor = item
-                                actorExpanded = false
+                                formState.selectedActor = item
+                                formState.actorExpanded = false
                             }
                         )
                     }
@@ -214,13 +216,13 @@ fun ActorDetectionScreen(
             onClick = {
                 onIntent(
                     FraudDetectionIntent.SubmitActorAnalysis(
-                        selectedActorType,
-                        selectedActor
+                        formState.selectedActorType,
+                        formState.selectedActor
                     )
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = selectedActor.isNotBlank() && !isLoading,
+            enabled = formState.isFormValid && !isLoading,
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {

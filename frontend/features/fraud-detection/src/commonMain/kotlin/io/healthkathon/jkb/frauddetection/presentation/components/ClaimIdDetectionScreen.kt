@@ -21,8 +21,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +40,7 @@ fun ClaimIdDetectionScreen(
     onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var claimId by remember { mutableStateOf("") }
+    val formState = rememberClaimIdFormState()
     val scrollState = rememberScrollState()
 
     Column(
@@ -84,8 +82,8 @@ fun ClaimIdDetectionScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
-            value = claimId,
-            onValueChange = { claimId = it },
+            value = formState.claimId,
+            onValueChange = { formState.claimId = it },
             label = { Text("ID Klaim") },
             placeholder = { Text("Contoh: CLM-2025-001234") },
             modifier = Modifier.fillMaxWidth(),
@@ -98,12 +96,10 @@ fun ClaimIdDetectionScreen(
 
         Button(
             onClick = {
-                onIntent(
-                    FraudDetectionIntent.SubmitClaimId(claimId)
-                )
+                onIntent(FraudDetectionIntent.SubmitClaimId(formState.claimId))
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = claimId.isNotBlank() && !isLoading,
+            enabled = formState.isFormValid && !isLoading,
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {

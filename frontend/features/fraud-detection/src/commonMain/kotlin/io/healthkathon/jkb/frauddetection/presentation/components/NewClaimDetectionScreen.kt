@@ -22,10 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -46,19 +42,7 @@ fun NewClaimDetectionScreen(
     onIntent: (FraudDetectionIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var claimId by remember { mutableStateOf("") }
-    var hospitalId by remember { mutableStateOf("") }
-    var doctorId by remember { mutableStateOf("") }
-    var diagnosis by remember { mutableStateOf("") }
-    var totalCost by remember { mutableStateOf("") }
-    var symptoms by remember { mutableStateOf("") }
-    var treatment by remember { mutableStateOf("") }
-    var medications by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-
-    var hospitalExpanded by remember { mutableStateOf(false) }
-    var doctorExpanded by remember { mutableStateOf(false) }
-    var diagnosisExpanded by remember { mutableStateOf(false) }
+    val formState = rememberNewClaimFormState()
 
     val diagnoses = listOf(
         "Diabetes Mellitus Type 2",
@@ -121,8 +105,8 @@ fun NewClaimDetectionScreen(
         }
 
         OutlinedTextField(
-            value = claimId,
-            onValueChange = { claimId = it },
+            value = formState.claimId,
+            onValueChange = { formState.claimId = it },
             label = { Text("Claim ID") },
             placeholder = { Text("Contoh: CLM-2025-001234") },
             modifier = Modifier.fillMaxWidth(),
@@ -134,16 +118,16 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ExposedDropdownMenuBox(
-            expanded = hospitalExpanded,
+            expanded = formState.hospitalExpanded,
             onExpandedChange = {
-                if (!hospitalExpanded && hospitals.isEmpty() && !isLoadingData) {
+                if (!formState.hospitalExpanded && hospitals.isEmpty() && !isLoadingData) {
                     onIntent(FraudDetectionIntent.LoadHospitals)
                 }
-                hospitalExpanded = !hospitalExpanded && !isLoading && !isLoadingData
+                formState.hospitalExpanded = !formState.hospitalExpanded && !isLoading && !isLoadingData
             }
         ) {
             OutlinedTextField(
-                value = hospitalId,
+                value = formState.hospitalId,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Hospital ID") },
@@ -163,7 +147,7 @@ fun NewClaimDetectionScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = hospitalExpanded)
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.hospitalExpanded)
                     }
                 },
                 modifier = Modifier
@@ -174,8 +158,8 @@ fun NewClaimDetectionScreen(
                 isError = dataError != null
             )
             ExposedDropdownMenu(
-                expanded = hospitalExpanded,
-                onDismissRequest = { hospitalExpanded = false }
+                expanded = formState.hospitalExpanded,
+                onDismissRequest = { formState.hospitalExpanded = false }
             ) {
                 if (hospitals.isEmpty()) {
                     DropdownMenuItem(
@@ -187,8 +171,8 @@ fun NewClaimDetectionScreen(
                         DropdownMenuItem(
                             text = { Text(item) },
                             onClick = {
-                                hospitalId = item
-                                hospitalExpanded = false
+                                formState.hospitalId = item
+                                formState.hospitalExpanded = false
                             }
                         )
                     }
@@ -199,16 +183,16 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ExposedDropdownMenuBox(
-            expanded = doctorExpanded,
+            expanded = formState.doctorExpanded,
             onExpandedChange = {
-                if (!doctorExpanded && doctors.isEmpty() && !isLoadingData) {
+                if (!formState.doctorExpanded && doctors.isEmpty() && !isLoadingData) {
                     onIntent(FraudDetectionIntent.LoadDoctors)
                 }
-                doctorExpanded = !doctorExpanded && !isLoading && !isLoadingData
+                formState.doctorExpanded = !formState.doctorExpanded && !isLoading && !isLoadingData
             }
         ) {
             OutlinedTextField(
-                value = doctorId,
+                value = formState.doctorId,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Doctor ID") },
@@ -228,7 +212,7 @@ fun NewClaimDetectionScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = doctorExpanded)
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.doctorExpanded)
                     }
                 },
                 modifier = Modifier
@@ -239,8 +223,8 @@ fun NewClaimDetectionScreen(
                 isError = dataError != null
             )
             ExposedDropdownMenu(
-                expanded = doctorExpanded,
-                onDismissRequest = { doctorExpanded = false }
+                expanded = formState.doctorExpanded,
+                onDismissRequest = { formState.doctorExpanded = false }
             ) {
                 if (doctors.isEmpty()) {
                     DropdownMenuItem(
@@ -252,8 +236,8 @@ fun NewClaimDetectionScreen(
                         DropdownMenuItem(
                             text = { Text(item) },
                             onClick = {
-                                doctorId = item
-                                doctorExpanded = false
+                                formState.doctorId = item
+                                formState.doctorExpanded = false
                             }
                         )
                     }
@@ -264,15 +248,15 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         ExposedDropdownMenuBox(
-            expanded = diagnosisExpanded,
-            onExpandedChange = { diagnosisExpanded = !diagnosisExpanded && !isLoading }
+            expanded = formState.diagnosisExpanded,
+            onExpandedChange = { formState.diagnosisExpanded = !formState.diagnosisExpanded && !isLoading }
         ) {
             OutlinedTextField(
-                value = diagnosis,
+                value = formState.diagnosis,
                 onValueChange = {},
                 readOnly = true,
                 label = { Text("Diagnosis") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = diagnosisExpanded) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.diagnosisExpanded) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
@@ -280,15 +264,15 @@ fun NewClaimDetectionScreen(
                 shape = RoundedCornerShape(12.dp)
             )
             ExposedDropdownMenu(
-                expanded = diagnosisExpanded,
-                onDismissRequest = { diagnosisExpanded = false }
+                expanded = formState.diagnosisExpanded,
+                onDismissRequest = { formState.diagnosisExpanded = false }
             ) {
                 diagnoses.forEach { item ->
                     DropdownMenuItem(
                         text = { Text(item) },
                         onClick = {
-                            diagnosis = item
-                            diagnosisExpanded = false
+                            formState.diagnosis = item
+                            formState.diagnosisExpanded = false
                         }
                     )
                 }
@@ -298,10 +282,10 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = totalCost,
-            onValueChange = { totalCost = it },
+            value = formState.totalCostField,
+            onValueChange = { formState.updateTotalCost(it) },
             label = { Text("Total Cost") },
-            placeholder = { Text("Contoh: 5000000") },
+            placeholder = { Text("Contoh: Rp 5.000.000") },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading,
             singleLine = true,
@@ -320,8 +304,8 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = symptoms,
-            onValueChange = { symptoms = it },
+            value = formState.symptoms,
+            onValueChange = { formState.symptoms = it },
             label = { Text("Symptoms") },
             placeholder = { Text("Contoh: Demam tinggi, batuk, sakit kepala") },
             modifier = Modifier.fillMaxWidth(),
@@ -334,8 +318,8 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = treatment,
-            onValueChange = { treatment = it },
+            value = formState.treatment,
+            onValueChange = { formState.treatment = it },
             label = { Text("Treatment") },
             placeholder = { Text("Contoh: Rawat inap, observasi 24 jam") },
             modifier = Modifier.fillMaxWidth(),
@@ -348,8 +332,8 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = medications,
-            onValueChange = { medications = it },
+            value = formState.medications,
+            onValueChange = { formState.medications = it },
             label = { Text("Medications") },
             placeholder = { Text("Contoh: Paracetamol 500mg, Amoxicillin 250mg") },
             modifier = Modifier.fillMaxWidth(),
@@ -362,8 +346,8 @@ fun NewClaimDetectionScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
+            value = formState.notes,
+            onValueChange = { formState.notes = it },
             label = { Text("Additional Notes") },
             placeholder = { Text("Catatan tambahan tentang kondisi pasien") },
             modifier = Modifier.fillMaxWidth(),
@@ -379,23 +363,20 @@ fun NewClaimDetectionScreen(
             onClick = {
                 onIntent(
                     FraudDetectionIntent.SubmitNewClaim(
-                        claimId,
-                        hospitalId,
-                        doctorId,
-                        diagnosis,
-                        totalCost,
-                        symptoms,
-                        treatment,
-                        medications,
-                        notes
+                        formState.claimId,
+                        formState.hospitalId,
+                        formState.doctorId,
+                        formState.diagnosis,
+                        formState.totalCostValue,
+                        formState.symptoms,
+                        formState.treatment,
+                        formState.medications,
+                        formState.notes
                     )
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = claimId.isNotBlank() && hospitalId.isNotBlank() &&
-                doctorId.isNotBlank() && diagnosis.isNotBlank() &&
-                totalCost.isNotBlank() && symptoms.isNotBlank() &&
-                treatment.isNotBlank() && medications.isNotBlank() && !isLoading,
+            enabled = formState.isFormValid && !isLoading,
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
