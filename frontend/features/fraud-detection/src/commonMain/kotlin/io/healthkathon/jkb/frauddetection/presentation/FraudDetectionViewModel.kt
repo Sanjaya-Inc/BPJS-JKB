@@ -208,7 +208,7 @@ class FraudDetectionViewModel(
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = response.answer,
+                        result = response.explanation,
                         currentClaimId = claimId,
                         currentActorType = null,
                         currentActorId = null,
@@ -248,7 +248,7 @@ class FraudDetectionViewModel(
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = response.answer,
+                        result = response.explanation,
                         currentClaimId = claimId,
                         currentActorType = null,
                         currentActorId = null,
@@ -341,7 +341,7 @@ ${response.explanation}
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = response.answer,
+                        result = response.explanation,
                         currentClaimId = null,
                         currentActorType = actorType.name,
                         currentActorId = actorId,

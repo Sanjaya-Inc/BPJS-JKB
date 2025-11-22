@@ -319,12 +319,87 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
         delay(2000)
 
         val claimId = claimCheckRequest.claimId
-        val mockAnswer = """
+
+        val validationResult = if (claimId.contains("001") ||
+            claimId.contains("004") ||
+            claimId.contains("006") ||
+            claimId.contains("009")
+        ) {
+            "FRAUD"
+        } else {
+            "NORMAL"
+        }
+
+        val confidenceScore = if (validationResult == "FRAUD") 85 else 100
+
+        val explanation = if (validationResult == "NORMAL") {
+            """
+# Hasil Analisis Fraud - Klaim ID: $claimId
+
+## 📊 Ringkasan Analisis
+**Status**: ✅ Klaim Normal  
+**Tingkat Kepercayaan**: **$confidenceScore%**  
+**Tanggal Analisis**: 21 November 2025, 14:30 WIB
+
+---
+
+## 🔍 Detail Klaim
+- **ID Klaim**: $claimId
+- **Rumah Sakit**: RS Harapan Sehat
+- **Dokter**: Dr. Ahmad Wijaya, Sp.PD
+- **Diagnosis**: Diabetes Mellitus Type 2
+- **Biaya Total**: Rp 13.200.000
+- **Tanggal Klaim**: 15 November 2025
+
+---
+
+## ✅ Validasi Berhasil
+
+### 1. Konsistensi Biaya
+- Biaya sesuai dengan standar tarif INA-CBG untuk diagnosis ini
+- Tidak ada item biaya yang mencurigakan
+- Biaya administrasi dalam batas normal (8%)
+
+### 2. Pola Temporal Normal
+- Waktu perawatan sesuai dengan standar medis (36 jam)
+- Tidak ada clustering klaim yang mencurigakan
+- Dokumentasi lengkap dan tepat waktu
+
+### 3. Profil Pasien Normal
+- Riwayat klaim konsisten dengan kondisi medis
+- Tidak ada pola kunjungan yang tidak wajar
+- Dokumentasi medis lengkap dan valid
+
+---
+
+## 💡 Rekomendasi
+
+**Proses Klaim**: Klaim dapat diproses untuk pembayaran sesuai prosedur standar.
+
+**Monitoring**: Lanjutkan monitoring rutin tanpa tindakan khusus.
+
+---
+
+## 📈 Analisis Komparatif
+
+| Metrik | Klaim Ini | Rata-rata Normal | Status |
+|--------|-----------|------------------|--------|
+| Biaya Total | Rp 13.2 jt | Rp 13.2 jt | ✅ Normal |
+| Durasi Rawat | 36 jam | 36 jam | ✅ Normal |
+| Jumlah Obat | 4 item | 4 item | ✅ Normal |
+| Biaya Admin | 8% | 8% | ✅ Normal |
+
+---
+
+**Catatan**: Analisis ini dihasilkan oleh sistem AI dengan tingkat kepercayaan $confidenceScore%. Klaim telah melewati semua validasi otomatis.
+            """.trimIndent()
+        } else {
+            """
 # Hasil Analisis Fraud - Klaim ID: $claimId
 
 ## 📊 Ringkasan Analisis
 **Status**: ⚠️ Potensi Fraud Terdeteksi  
-**Tingkat Risiko**: **TINGGI** (85%)  
+**Tingkat Risiko**: **TINGGI** ($confidenceScore%)  
 **Tanggal Analisis**: 21 November 2025, 14:30 WIB
 
 ---
@@ -384,10 +459,15 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
 ---
 
 **Catatan**: Analisis ini dihasilkan oleh sistem AI dan memerlukan verifikasi manual oleh tim investigasi fraud.
-        """.trimIndent()
+            """.trimIndent()
+        }
 
         return ClaimCheckAnswerData(
-            answer = mockAnswer,
+            claimId = claimId,
+            validationResult = validationResult,
+            confidenceScore = confidenceScore,
+            detailClaimData = null,
+            explanation = explanation,
             status = "success"
         )
     }
@@ -398,7 +478,8 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
         val hospitalName = newClaimRequest.hospitalId
         val doctorName = newClaimRequest.doctorId
         val costValue = newClaimRequest.totalCost
-        val formattedCost = "Rp ${costValue.toString().reversed().chunked(3).joinToString(".").reversed()}"
+        val formattedCost =
+            "Rp ${costValue.toString().reversed().chunked(3).joinToString(".").reversed()}"
 
         val formDataSummary = """
 Hospital ID: $hospitalName
@@ -495,13 +576,22 @@ Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak dit
         val actorName = if (actorType == "DOCTOR") "Dr. $actorId" else actorId
         val actorDisplayName = if (actorType == "DOCTOR") "Dokter" else "Rumah Sakit"
 
-        val mockAnswer = """
+        val validationResult =
+            if (actorId.contains("001") || actorId.contains("D001") || actorId.contains("H001")) {
+                "SUSPICIOUS"
+            } else {
+                "NORMAL"
+            }
+
+        val confidenceScore = if (validationResult == "SUSPICIOUS") 55 else 95
+
+        val explanation = """
 # Hasil Analisis Fraud - $actorDisplayName
 
 ## 📊 Profil $actorDisplayName
 **Nama**: $actorName  
-**Status Analisis**: ⚠️ Memerlukan Perhatian  
-**Tingkat Risiko**: **SEDANG** (55%)  
+**Status Analisis**: ${if (validationResult == "SUSPICIOUS") "⚠️ Memerlukan Perhatian" else "✅ Normal"}  
+**Tingkat Risiko**: **${if (validationResult == "SUSPICIOUS") "SEDANG" else "RENDAH"}** ($confidenceScore%)  
 **Tanggal Analisis**: 21 November 2025, 14:30 WIB
 
 ---
@@ -509,20 +599,22 @@ Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak dit
 ## 🔍 Statistik Klaim (90 Hari Terakhir)
 
 ### Volume Klaim
-- **Total Klaim**: 247 klaim
-- **Rata-rata per Hari**: 2.7 klaim
-- **Nilai Total**: Rp 1.2 Miliar
-- **Rata-rata Nilai Klaim**: Rp 4.8 Juta
+- **Total Klaim**: ${if (validationResult == "SUSPICIOUS") "247" else "145"} klaim
+- **Rata-rata per Hari**: ${if (validationResult == "SUSPICIOUS") "2.7" else "1.6"} klaim
+- **Nilai Total**: Rp ${if (validationResult == "SUSPICIOUS") "1.2" else "0.6"} Miliar
+- **Rata-rata Nilai Klaim**: Rp ${if (validationResult == "SUSPICIOUS") "4.8" else "4.1"} Juta
 
 ### Distribusi Diagnosis
-1. **Diabetes Mellitus** - 45 klaim (18%)
-2. **Hipertensi** - 38 klaim (15%)
-3. **ISPA** - 32 klaim (13%)
-4. **Gastritis** - 28 klaim (11%)
-5. **Lainnya** - 104 klaim (43%)
+1. **Diabetes Mellitus** - ${if (validationResult == "SUSPICIOUS") "45" else "22"} klaim (${if (validationResult == "SUSPICIOUS") "18" else "15"}%)
+2. **Hipertensi** - ${if (validationResult == "SUSPICIOUS") "38" else "20"} klaim (${if (validationResult == "SUSPICIOUS") "15" else "14"}%)
+3. **ISPA** - ${if (validationResult == "SUSPICIOUS") "32" else "18"} klaim (${if (validationResult == "SUSPICIOUS") "13" else "12"}%)
+4. **Gastritis** - ${if (validationResult == "SUSPICIOUS") "28" else "15"} klaim (${if (validationResult == "SUSPICIOUS") "11" else "10"}%)
+5. **Lainnya** - ${if (validationResult == "SUSPICIOUS") "104" else "70"} klaim (${if (validationResult == "SUSPICIOUS") "43" else "49"}%)
 
 ---
 
+${if (validationResult == "SUSPICIOUS") {
+"""
 ## ⚠️ Pola Mencurigakan Terdeteksi
 
 ### 1. Anomali Biaya
@@ -539,19 +631,6 @@ Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak dit
 - **12 pasien** dengan kunjungan berulang >10x dalam 90 hari
 - Beberapa pasien memiliki **alamat yang sama**
 - Pola diagnosis berulang pada pasien yang sama
-
----
-
-## 📊 Analisis Komparatif
-
-### Perbandingan dengan Peer Group
-
-| Metrik | $actorDisplayName Ini | Rata-rata Peer | Status |
-|--------|------------------------------|----------------|--------|
-| Volume Klaim/Bulan | 82 | 45 | ⚠️ +82% |
-| Nilai Rata-rata Klaim | Rp 4.8 jt | Rp 3.2 jt | ⚠️ +50% |
-| Rejection Rate | 3% | 5% | ✅ Normal |
-| Kompleksitas Kasus | 6.2/10 | 5.8/10 | ✅ Normal |
 
 ---
 
@@ -579,8 +658,54 @@ Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak dit
    - Klarifikasi pola klaim yang mencurigakan
    - Peringatan formal jika diperlukan
 
+"""
+        } else {
+"""
+## ✅ Profil Normal
+
+### 1. Pola Biaya Normal
+- Biaya klaim konsisten dengan standar INA-CBG
+- Tidak ada anomali biaya yang signifikan
+- Biaya administrasi dalam batas normal (8-10%)
+
+### 2. Pola Temporal Normal
+- Distribusi klaim merata sepanjang bulan
+- Tidak ada clustering yang mencurigakan
+- Waktu pemrosesan sesuai standar
+
+### 3. Pola Pasien Normal
+- Tidak ada pasien dengan kunjungan berulang yang tidak wajar
+- Dokumentasi lengkap dan konsisten
+- Pola diagnosis sesuai dengan kondisi medis
+
 ---
 
+## 💡 Rekomendasi
+
+**Monitoring Rutin**: Lanjutkan monitoring standar tanpa tindakan khusus.
+
+**Status**: $actorDisplayName ini memiliki profil klaim yang normal dan tidak memerlukan investigasi tambahan.
+
+"""
+        }}
+
+---
+
+## 📊 Analisis Komparatif
+
+### Perbandingan dengan Peer Group
+
+| Metrik | $actorDisplayName Ini | Rata-rata Peer | Status |
+|--------|------------------------------|----------------|--------|
+| Volume Klaim/Bulan | ${if (validationResult == "SUSPICIOUS") "82" else "48"} | 45 | ${if (validationResult == "SUSPICIOUS") "⚠️ +82%" else "✅ +7%"} |
+| Nilai Rata-rata Klaim | Rp ${if (validationResult == "SUSPICIOUS") "4.8" else "4.1"} jt | Rp 3.2 jt | ${if (validationResult == "SUSPICIOUS") "⚠️ +50%" else "✅ +28%"} |
+| Rejection Rate | ${if (validationResult == "SUSPICIOUS") "3" else "4"}% | 5% | ✅ Normal |
+| Kompleksitas Kasus | ${if (validationResult == "SUSPICIOUS") "6.2" else "5.9"}/10 | 5.8/10 | ✅ Normal |
+
+---
+
+${if (validationResult == "SUSPICIOUS") {
+"""
 ## 📈 Trend Analysis (6 Bulan)
 
 ```
@@ -608,10 +733,22 @@ Nov: ███████████████ 112 ⚠️
 **Kesimpulan**: $actorDisplayName ini menunjukkan beberapa pola yang memerlukan investigasi lebih lanjut. Disarankan untuk melakukan audit dan monitoring intensif dalam 30 hari ke depan.
 
 **Tindak Lanjut**: Tim investigasi akan menghubungi dalam 3 hari kerja untuk proses audit.
+
+"""
+        } else {
+"""
+**Kesimpulan**: $actorDisplayName ini memiliki profil klaim yang sehat dan tidak menunjukkan indikasi fraud. Lanjutkan monitoring rutin.
+
+"""
+        }}
         """.trimIndent()
 
         return ClaimCheckAnswerData(
-            answer = mockAnswer,
+            claimId = actorId,
+            validationResult = validationResult,
+            confidenceScore = confidenceScore,
+            detailClaimData = null,
+            explanation = explanation,
             status = "success"
         )
     }
@@ -659,7 +796,9 @@ Nov: ███████████████ 112 ⚠️
                 totalCost = 3250000.0,
                 label = "NORMAL",
                 medicalResumeJson = """{"symptoms":"Cough, fever, chest discomfort",""" +
-                    """"treatment":"Antibiotics, rest","medications":"Amoxicillin, Paracetamol",""" +
+                    """"treatment":"Antibiotics, rest","medications":"Amoxicillin, 
+                        |Paracetamol",
+                    """.trimMargin() +
                     """"notes":"Follow-up in 1 week"}"""
             ),
             ClaimData(
@@ -669,8 +808,12 @@ Nov: ███████████████ 112 ⚠️
                 diagnosis = "Appendicitis",
                 totalCost = 28500000.0,
                 label = "NORMAL",
-                medicalResumeJson = """{"symptoms":"Abdominal pain, nausea, vomiting","treatment":"Appendectomy",""" +
-                    """"medications":"Ceftriaxone, Ketorolac","notes":"Surgery successful, recovery normal"}"""
+                medicalResumeJson = """{"symptoms":"Abdominal pain, nausea, vomiting",
+                    |"treatment":"Appendectomy",
+                """.trimMargin() +
+                    """"medications":"Ceftriaxone, Ketorolac",
+                        |"notes":"Surgery successful, recovery normal"}
+                    """.trimMargin()
             ),
             ClaimData(
                 claimId = "CLM004",
@@ -680,7 +823,9 @@ Nov: ███████████████ 112 ⚠️
                 totalCost = 125000000.0,
                 label = "FRAUD",
                 medicalResumeJson = """{"symptoms":"Chest pain, shortness of breath",""" +
-                    """"treatment":"Angioplasty","medications":"Aspirin, Clopidogrel, Atorvastatin",""" +
+                    """"treatment":"Angioplasty",
+                        |"medications":"Aspirin, Clopidogrel, Atorvastatin",
+                    """.trimMargin() +
                     """"notes":"Suspicious billing patterns detected"}"""
             ),
             ClaimData(
@@ -690,8 +835,13 @@ Nov: ███████████████ 112 ⚠️
                 diagnosis = "Normal Delivery",
                 totalCost = 8500000.0,
                 label = "NORMAL",
-                medicalResumeJson = """{"symptoms":"Labor contractions","treatment":"Normal vaginal delivery",""" +
-                    """"medications":"Oxytocin, Vitamin K","notes":"Mother and baby healthy"}"""
+                medicalResumeJson = """{"symptoms":"Labor
+                    | contractions","treatment":"Normal 
+                    | vaginal delivery",
+                """.trimMargin() +
+                    """"medications":"Oxytocin, Vitamin K",
+                        |"notes":"Mother and baby healthy"}
+                    """.trimMargin()
             ),
             ClaimData(
                 claimId = "CLM006",
