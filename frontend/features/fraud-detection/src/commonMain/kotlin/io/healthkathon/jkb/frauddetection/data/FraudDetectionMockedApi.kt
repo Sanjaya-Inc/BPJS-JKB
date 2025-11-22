@@ -4,7 +4,9 @@ import io.healthkathon.jkb.frauddetection.data.model.ActorAnalysisRequest
 import io.healthkathon.jkb.frauddetection.data.model.ActorFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckAnswerData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckRequest
+import io.healthkathon.jkb.frauddetection.data.model.ClaimData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimFeedbackRequest
+import io.healthkathon.jkb.frauddetection.data.model.ClaimsResponse
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.DoctorResponse
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
@@ -443,5 +445,131 @@ Nov: ███████████████ 112 ⚠️
             status = "success",
             message = "Terima kasih atas feedback Anda!"
         )
+    }
+
+    override suspend fun getClaims(
+        status: String?,
+        hospitalId: String?,
+        doctorId: String?
+    ): ClaimsResponse {
+        delay(1000)
+
+        val allClaims = listOf(
+            ClaimData(
+                claimId = "CLM001",
+                doctorId = "D001",
+                hospitalId = "H001",
+                diagnosis = "Diabetes Mellitus Type 2",
+                totalCost = 45750000.0,
+                label = "FRAUD",
+                medicalResumeJson = """{"symptoms":"Frequent urination, excessive thirst",""" +
+                    """"treatment":"Insulin therapy","medications":"Metformin, Insulin",""" +
+                    """"notes":"Patient requires regular monitoring"}"""
+            ),
+            ClaimData(
+                claimId = "CLM002",
+                doctorId = "D002",
+                hospitalId = "H001",
+                diagnosis = "Acute Bronchitis",
+                totalCost = 3250000.0,
+                label = "NORMAL",
+                medicalResumeJson = """{"symptoms":"Cough, fever, chest discomfort",""" +
+                    """"treatment":"Antibiotics, rest","medications":"Amoxicillin, Paracetamol",""" +
+                    """"notes":"Follow-up in 1 week"}"""
+            ),
+            ClaimData(
+                claimId = "CLM003",
+                doctorId = "D003",
+                hospitalId = "H002",
+                diagnosis = "Appendicitis",
+                totalCost = 28500000.0,
+                label = "NORMAL",
+                medicalResumeJson = """{"symptoms":"Abdominal pain, nausea, vomiting","treatment":"Appendectomy",""" +
+                    """"medications":"Ceftriaxone, Ketorolac","notes":"Surgery successful, recovery normal"}"""
+            ),
+            ClaimData(
+                claimId = "CLM004",
+                doctorId = "D005",
+                hospitalId = "H003",
+                diagnosis = "Coronary Artery Disease",
+                totalCost = 125000000.0,
+                label = "FRAUD",
+                medicalResumeJson = """{"symptoms":"Chest pain, shortness of breath",""" +
+                    """"treatment":"Angioplasty","medications":"Aspirin, Clopidogrel, Atorvastatin",""" +
+                    """"notes":"Suspicious billing patterns detected"}"""
+            ),
+            ClaimData(
+                claimId = "CLM005",
+                doctorId = "D004",
+                hospitalId = "H004",
+                diagnosis = "Normal Delivery",
+                totalCost = 8500000.0,
+                label = "NORMAL",
+                medicalResumeJson = """{"symptoms":"Labor contractions","treatment":"Normal vaginal delivery",""" +
+                    """"medications":"Oxytocin, Vitamin K","notes":"Mother and baby healthy"}"""
+            ),
+            ClaimData(
+                claimId = "CLM006",
+                doctorId = "D001",
+                hospitalId = "H001",
+                diagnosis = "Hypertension",
+                totalCost = 52000000.0,
+                label = "FRAUD",
+                medicalResumeJson = """{"symptoms":"High blood pressure, headache",""" +
+                    """"treatment":"Medication management","medications":"Amlodipine, Losartan",""" +
+                    """"notes":"Excessive medication costs flagged"}"""
+            ),
+            ClaimData(
+                claimId = "CLM007",
+                doctorId = "D006",
+                hospitalId = "H002",
+                diagnosis = "Cataract Surgery",
+                totalCost = 15000000.0,
+                label = "NORMAL",
+                medicalResumeJson = """{"symptoms":"Blurred vision, difficulty seeing",""" +
+                    """"treatment":"Phacoemulsification","medications":"Eye drops, Antibiotics",""" +
+                    """"notes":"Routine procedure, no complications"}"""
+            ),
+            ClaimData(
+                claimId = "CLM008",
+                doctorId = "D007",
+                hospitalId = "H006",
+                diagnosis = "Chronic Sinusitis",
+                totalCost = 4200000.0,
+                label = "NORMAL",
+                medicalResumeJson = """{"symptoms":"Nasal congestion, facial pain",""" +
+                    """"treatment":"Medication, nasal irrigation","medications":"Amoxicillin, Nasal spray",""" +
+                    """"notes":"Patient improving"}"""
+            ),
+            ClaimData(
+                claimId = "CLM009",
+                doctorId = "D003",
+                hospitalId = "H002",
+                diagnosis = "Fracture Femur",
+                totalCost = 95000000.0,
+                label = "FRAUD",
+                medicalResumeJson = """{"symptoms":"Severe leg pain, inability to walk","treatment":"ORIF surgery",""" +
+                    """"medications":"Morphine, Cefazolin","notes":"Billing irregularities detected"}"""
+            ),
+            ClaimData(
+                claimId = "CLM010",
+                doctorId = "D008",
+                hospitalId = "H001",
+                diagnosis = "Eczema",
+                totalCost = 1500000.0,
+                label = "NORMAL",
+                medicalResumeJson = """{"symptoms":"Itchy skin, rash","treatment":"Topical steroids",""" +
+                    """"medications":"Hydrocortisone cream","notes":"Mild case, good prognosis"}"""
+            )
+        )
+
+        val filteredClaims = allClaims.filter { claim ->
+            val statusMatch = status == null || claim.label.equals(status, ignoreCase = true)
+            val hospitalMatch = hospitalId == null || claim.hospitalId == hospitalId
+            val doctorMatch = doctorId == null || claim.doctorId == doctorId
+            statusMatch && hospitalMatch && doctorMatch
+        }
+
+        return ClaimsResponse(data = filteredClaims)
     }
 }

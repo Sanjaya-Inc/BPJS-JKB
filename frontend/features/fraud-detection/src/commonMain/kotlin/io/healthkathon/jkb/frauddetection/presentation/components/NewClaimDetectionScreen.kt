@@ -37,6 +37,7 @@ fun NewClaimDetectionScreen(
     result: String?,
     doctors: PersistentList<String>,
     hospitals: PersistentList<String>,
+    claims: PersistentList<String>,
     isLoadingData: Boolean,
     dataError: String?,
     onIntent: (FraudDetectionIntent) -> Unit,
@@ -105,16 +106,68 @@ fun NewClaimDetectionScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        OutlinedTextField(
-            value = formState.claimId,
-            onValueChange = { formState.claimId = it },
-            label = { Text("Claim ID") },
-            placeholder = { Text("Contoh: CLM-2025-001234") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp)
-        )
+        ExposedDropdownMenuBox(
+            expanded = formState.claimIdExpanded,
+            onExpandedChange = {
+                if (!formState.claimIdExpanded && claims.isEmpty() && !isLoadingData) {
+                    onIntent(FraudDetectionIntent.LoadClaims)
+                }
+                formState.claimIdExpanded = !formState.claimIdExpanded && !isLoading && !isLoadingData
+            }
+        ) {
+            OutlinedTextField(
+                value = formState.claimId,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Claim ID") },
+                placeholder = {
+                    Text(
+                        if (isLoadingData) {
+                            "Memuat data..."
+                        } else {
+                            "Pilih Claim ID"
+                        }
+                    )
+                },
+                trailingIcon = {
+                    if (isLoadingData && claims.isEmpty()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.claimIdExpanded)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                enabled = !isLoading && !isLoadingData && claims.isNotEmpty(),
+                shape = RoundedCornerShape(12.dp),
+                isError = dataError != null
+            )
+            ExposedDropdownMenu(
+                expanded = formState.claimIdExpanded,
+                onDismissRequest = { formState.claimIdExpanded = false }
+            ) {
+                if (claims.isEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("Tidak ada data") },
+                        onClick = { }
+                    )
+                } else {
+                    claims.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item) },
+                            onClick = {
+                                formState.claimId = item
+                                formState.claimIdExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

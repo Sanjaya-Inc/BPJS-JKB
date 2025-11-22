@@ -40,6 +40,7 @@ class NewClaimFormState(
     var medications by mutableStateOf(initialMedications)
     var notes by mutableStateOf(initialNotes)
 
+    var claimIdExpanded by mutableStateOf(false)
     var hospitalExpanded by mutableStateOf(false)
     var doctorExpanded by mutableStateOf(false)
     var diagnosisExpanded by mutableStateOf(false)
@@ -117,6 +118,7 @@ class NewClaimFormState(
         treatment = ""
         medications = ""
         notes = ""
+        claimIdExpanded = false
         hospitalExpanded = false
         doctorExpanded = false
         diagnosisExpanded = false

@@ -5,6 +5,7 @@ import io.healthkathon.jkb.frauddetection.data.model.ActorAnalysisRequest
 import io.healthkathon.jkb.frauddetection.data.model.ActorFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckAnswerData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckRequest
+import io.healthkathon.jkb.frauddetection.data.model.ClaimData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
@@ -112,6 +113,21 @@ class FraudDetectionRepository(
                     feedbackType = feedbackType
                 )
             )
+        }
+    }
+
+    suspend fun getClaims(
+        status: String? = null,
+        hospitalId: String? = null,
+        doctorId: String? = null
+    ): Result<PersistentList<ClaimData>> {
+        return remoteApi.runCatching {
+            getClaims(
+                status = status,
+                hospitalId = hospitalId,
+                doctorId = doctorId
+            ).data?.filterNotNull()?.toPersistentList()
+                ?: persistentListOf()
         }
     }
 }

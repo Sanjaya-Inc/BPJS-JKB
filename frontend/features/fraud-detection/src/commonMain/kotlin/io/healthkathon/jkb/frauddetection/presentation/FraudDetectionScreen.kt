@@ -83,6 +83,11 @@ private fun CompactFraudDetectionLayout(
                 FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    claims = uiState.filteredClaims,
+                    selectedClaimId = uiState.selectedClaimId,
+                    searchQuery = uiState.searchQuery,
+                    isLoadingData = uiState.isLoadingData,
+                    dataError = uiState.dataError,
                     feedbackGiven = uiState.feedbackGiven,
                     onIntent = onIntent
                 )
@@ -92,6 +97,7 @@ private fun CompactFraudDetectionLayout(
                     feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
+                    claims = uiState.claimsIds,
                     isLoadingData = uiState.isLoadingData,
                     dataError = uiState.dataError,
                     onIntent = onIntent
@@ -173,6 +179,11 @@ private fun ExpandedFraudDetectionLayout(
                 FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    claims = uiState.filteredClaims,
+                    selectedClaimId = uiState.selectedClaimId,
+                    searchQuery = uiState.searchQuery,
+                    isLoadingData = uiState.isLoadingData,
+                    dataError = uiState.dataError,
                     feedbackGiven = uiState.feedbackGiven,
                     onIntent = onIntent
                 )
@@ -182,6 +193,7 @@ private fun ExpandedFraudDetectionLayout(
                     feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
+                    claims = uiState.claimsIds,
                     isLoadingData = uiState.isLoadingData,
                     dataError = uiState.dataError,
                     onIntent = onIntent

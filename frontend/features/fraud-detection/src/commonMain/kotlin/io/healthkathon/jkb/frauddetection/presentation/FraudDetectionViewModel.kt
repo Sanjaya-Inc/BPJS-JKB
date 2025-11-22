@@ -16,6 +16,10 @@ data class FraudDetectionUiState(
     val result: String? = null,
     val hospitals: PersistentList<HospitalData> = persistentListOf(),
     val doctors: PersistentList<DoctorData> = persistentListOf(),
+    val claims: PersistentList<io.healthkathon.jkb.frauddetection.data.model.ClaimData> = persistentListOf(),
+    val filteredClaims: PersistentList<io.healthkathon.jkb.frauddetection.data.model.ClaimData> = persistentListOf(),
+    val selectedClaimId: String? = null,
+    val searchQuery: String = "",
     val isLoadingData: Boolean = false,
     val dataError: String? = null,
     val currentClaimId: String? = null,
@@ -25,6 +29,7 @@ data class FraudDetectionUiState(
 ) {
     val hospitalsName get() = hospitals.mapNotNull { it.name }.toPersistentList()
     val doctorsName get() = doctors.mapNotNull { it.name }.toPersistentList()
+    val claimsIds get() = claims.map { it.claimId }.toPersistentList()
 }
 
 enum class FraudDetectionTab(val title: String, val icon: String) {
@@ -41,6 +46,9 @@ enum class ActorType(val displayName: String) {
 sealed interface FraudDetectionIntent {
     data class NavigateToTab(val tab: FraudDetectionTab) : FraudDetectionIntent
     data class SubmitClaimId(val claimId: String) : FraudDetectionIntent
+    data class SelectClaim(val claimId: String) : FraudDetectionIntent
+    data object SubmitSelectedClaim : FraudDetectionIntent
+    data class SearchClaims(val query: String) : FraudDetectionIntent
     data class SubmitNewClaim(
         val claimId: String,
         val hospitalId: String,
@@ -55,6 +63,7 @@ sealed interface FraudDetectionIntent {
     data class SubmitActorAnalysis(val actorType: ActorType, val actorId: String) : FraudDetectionIntent
     data object LoadHospitals : FraudDetectionIntent
     data object LoadDoctors : FraudDetectionIntent
+    data object LoadClaims : FraudDetectionIntent
     data class SubmitFeedback(val isLike: Boolean) : FraudDetectionIntent
 }
 
@@ -68,6 +77,9 @@ class FraudDetectionViewModel(
         when (intent) {
             is FraudDetectionIntent.NavigateToTab -> navigateToTab(intent.tab)
             is FraudDetectionIntent.SubmitClaimId -> submitClaimId(intent.claimId)
+            is FraudDetectionIntent.SelectClaim -> selectClaim(intent.claimId)
+            is FraudDetectionIntent.SubmitSelectedClaim -> submitSelectedClaim()
+            is FraudDetectionIntent.SearchClaims -> searchClaims(intent.query)
             is FraudDetectionIntent.SubmitNewClaim -> submitNewClaim(
                 intent.claimId,
                 intent.hospitalId,
@@ -85,6 +97,7 @@ class FraudDetectionViewModel(
             )
             is FraudDetectionIntent.LoadHospitals -> loadHospitals()
             is FraudDetectionIntent.LoadDoctors -> loadDoctors()
+            is FraudDetectionIntent.LoadClaims -> loadClaims()
             is FraudDetectionIntent.SubmitFeedback -> submitFeedback(intent.isLike)
         }
     }
@@ -118,6 +131,79 @@ class FraudDetectionViewModel(
                     state.copy(
                         isLoadingData = false,
                         dataError = "Gagal memuat data dokter: ${error.message}"
+                    )
+                }
+            }
+    }
+
+    private fun loadClaims() = intent {
+        reduce { state.copy(isLoadingData = true, dataError = null) }
+
+        repository.getClaims()
+            .onSuccess { claims ->
+                reduce {
+                    state.copy(
+                        claims = claims,
+                        filteredClaims = claims,
+                        isLoadingData = false
+                    )
+                }
+            }
+            .onFailure { error ->
+                reduce {
+                    state.copy(
+                        isLoadingData = false,
+                        dataError = "Gagal memuat data klaim: ${error.message}"
+                    )
+                }
+            }
+    }
+
+    private fun selectClaim(claimId: String) = intent {
+        reduce {
+            state.copy(selectedClaimId = claimId)
+        }
+    }
+
+    private fun searchClaims(query: String) = intent {
+        reduce {
+            val filtered = if (query.isBlank()) {
+                state.claims
+            } else {
+                state.claims.filter { claim ->
+                    claim.claimId.contains(query, ignoreCase = true) ||
+                        claim.diagnosis.contains(query, ignoreCase = true) ||
+                        claim.label.contains(query, ignoreCase = true)
+                }.toPersistentList()
+            }
+            state.copy(searchQuery = query, filteredClaims = filtered)
+        }
+    }
+
+    private fun submitSelectedClaim() = intent {
+        val claimId = state.selectedClaimId ?: return@intent
+
+        reduce { state.copy(isLoading = true, result = null, feedbackGiven = false) }
+
+        repository.checkByClaimId(claimId)
+            .onSuccess { response ->
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = response.answer,
+                        currentClaimId = claimId,
+                        currentActorType = null,
+                        currentActorId = null,
+                        feedbackGiven = false
+                    )
+                }
+            }
+            .onFailure { error ->
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = "❌ Gagal menganalisis klaim: ${error.message}",
+                        currentClaimId = null
                     )
                 }
             }
