@@ -40,7 +40,8 @@ fun NewClaimDetectionScreen(
     isLoadingData: Boolean,
     dataError: String?,
     onIntent: (FraudDetectionIntent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    feedbackGiven: Boolean = false,
 ) {
     val formState = rememberNewClaimFormState()
 
@@ -396,7 +397,13 @@ fun NewClaimDetectionScreen(
 
         AnimatedVisibility(visible = result != null) {
             result?.let {
-                MarkdownResultCard(markdown = it)
+                MarkdownResultCard(
+                    markdown = it,
+                    feedbackGiven = feedbackGiven,
+                    onFeedback = { isLike ->
+                        onIntent(FraudDetectionIntent.SubmitFeedback(isLike))
+                    }
+                )
             }
         }
 

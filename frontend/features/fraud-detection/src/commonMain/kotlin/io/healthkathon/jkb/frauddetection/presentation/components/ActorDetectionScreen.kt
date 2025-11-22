@@ -46,7 +46,8 @@ fun ActorDetectionScreen(
     isLoadingData: Boolean,
     dataError: String?,
     onIntent: (FraudDetectionIntent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    feedbackGiven: Boolean = false,
 ) {
     val formState = rememberActorAnalysisFormState()
     val actorList = if (formState.selectedActorType == ActorType.DOCTOR) doctors else hospitals
@@ -242,7 +243,13 @@ fun ActorDetectionScreen(
 
         AnimatedVisibility(visible = result != null) {
             result?.let {
-                MarkdownResultCard(markdown = it)
+                MarkdownResultCard(
+                    markdown = it,
+                    feedbackGiven = feedbackGiven,
+                    onFeedback = { isLike ->
+                        onIntent(FraudDetectionIntent.SubmitFeedback(isLike))
+                    }
+                )
             }
         }
 

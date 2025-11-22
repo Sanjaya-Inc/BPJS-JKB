@@ -2,9 +2,12 @@ package io.healthkathon.jkb.frauddetection.domain
 
 import io.healthkathon.jkb.frauddetection.data.FraudDetectionRemoteApi
 import io.healthkathon.jkb.frauddetection.data.model.ActorAnalysisRequest
+import io.healthkathon.jkb.frauddetection.data.model.ActorFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckAnswerData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckRequest
+import io.healthkathon.jkb.frauddetection.data.model.ClaimFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
+import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
 import io.healthkathon.jkb.frauddetection.domain.model.MedicalResume
@@ -77,6 +80,36 @@ class FraudDetectionRepository(
                 ActorAnalysisRequest(
                     actorType = actorType,
                     actorId = actorId
+                )
+            )
+        }
+    }
+
+    suspend fun submitClaimFeedback(
+        claimId: String,
+        feedbackType: String
+    ): Result<FeedbackResponse> {
+        return remoteApi.runCatching {
+            submitClaimFeedback(
+                ClaimFeedbackRequest(
+                    claimId = claimId,
+                    feedbackType = feedbackType
+                )
+            )
+        }
+    }
+
+    suspend fun submitActorFeedback(
+        actorType: String,
+        actorId: String,
+        feedbackType: String
+    ): Result<FeedbackResponse> {
+        return remoteApi.runCatching {
+            submitActorFeedback(
+                ActorFeedbackRequest(
+                    actorType = actorType,
+                    actorId = actorId,
+                    feedbackType = feedbackType
                 )
             )
         }

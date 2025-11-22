@@ -17,7 +17,11 @@ data class FraudDetectionUiState(
     val hospitals: PersistentList<HospitalData> = persistentListOf(),
     val doctors: PersistentList<DoctorData> = persistentListOf(),
     val isLoadingData: Boolean = false,
-    val dataError: String? = null
+    val dataError: String? = null,
+    val currentClaimId: String? = null,
+    val currentActorType: String? = null,
+    val currentActorId: String? = null,
+    val feedbackGiven: Boolean = false
 ) {
     val hospitalsName get() = hospitals.mapNotNull { it.name }.toPersistentList()
     val doctorsName get() = doctors.mapNotNull { it.name }.toPersistentList()
@@ -51,6 +55,7 @@ sealed interface FraudDetectionIntent {
     data class SubmitActorAnalysis(val actorType: ActorType, val actorId: String) : FraudDetectionIntent
     data object LoadHospitals : FraudDetectionIntent
     data object LoadDoctors : FraudDetectionIntent
+    data class SubmitFeedback(val isLike: Boolean) : FraudDetectionIntent
 }
 
 @KoinViewModel
@@ -80,6 +85,7 @@ class FraudDetectionViewModel(
             )
             is FraudDetectionIntent.LoadHospitals -> loadHospitals()
             is FraudDetectionIntent.LoadDoctors -> loadDoctors()
+            is FraudDetectionIntent.SubmitFeedback -> submitFeedback(intent.isLike)
         }
     }
 
@@ -118,21 +124,40 @@ class FraudDetectionViewModel(
     }
 
     private fun navigateToTab(tab: FraudDetectionTab) = intent {
-        reduce { state.copy(currentTab = tab, result = null) }
+        reduce {
+            state.copy(
+                currentTab = tab,
+                result = null,
+                feedbackGiven = false,
+                currentClaimId = null,
+                currentActorType = null,
+                currentActorId = null
+            )
+        }
     }
 
     private fun submitClaimId(claimId: String) = intent {
-        reduce { state.copy(isLoading = true, result = null) }
+        reduce { state.copy(isLoading = true, result = null, feedbackGiven = false) }
 
         repository.checkByClaimId(claimId)
             .onSuccess { response ->
-                reduce { state.copy(isLoading = false, result = response.answer) }
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = response.answer,
+                        currentClaimId = claimId,
+                        currentActorType = null,
+                        currentActorId = null,
+                        feedbackGiven = false
+                    )
+                }
             }
             .onFailure { error ->
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = "❌ Gagal menganalisis klaim: ${error.message}"
+                        result = "❌ Gagal menganalisis klaim: ${error.message}",
+                        currentClaimId = null
                     )
                 }
             }
@@ -149,7 +174,7 @@ class FraudDetectionViewModel(
         medications: String,
         notes: String
     ) = intent {
-        reduce { state.copy(isLoading = true, result = null) }
+        reduce { state.copy(isLoading = true, result = null, feedbackGiven = false) }
 
         val costValue = totalCost.replace(Regex("[^0-9.]"), "").toDoubleOrNull() ?: 0.0
         val medicalResume = MedicalResume(
@@ -168,32 +193,81 @@ class FraudDetectionViewModel(
             medicalResume = medicalResume
         )
             .onSuccess { response ->
-                reduce { state.copy(isLoading = false, result = response.answer) }
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = response.answer,
+                        currentClaimId = claimId,
+                        currentActorType = null,
+                        currentActorId = null,
+                        feedbackGiven = false
+                    )
+                }
             }
             .onFailure { error ->
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = "❌ Gagal menganalisis klaim baru: ${error.message}"
+                        result = "❌ Gagal menganalisis klaim baru: ${error.message}",
+                        currentClaimId = null
                     )
                 }
             }
     }
 
     private fun submitActorAnalysis(actorType: ActorType, actorId: String) = intent {
-        reduce { state.copy(isLoading = true, result = null) }
+        reduce { state.copy(isLoading = true, result = null, feedbackGiven = false) }
 
         repository.analyzeActor(actorType.name, actorId)
             .onSuccess { response ->
-                reduce { state.copy(isLoading = false, result = response.answer) }
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = response.answer,
+                        currentClaimId = null,
+                        currentActorType = actorType.name,
+                        currentActorId = actorId,
+                        feedbackGiven = false
+                    )
+                }
             }
             .onFailure { error ->
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = "❌ Gagal menganalisis aktor: ${error.message}"
+                        result = "❌ Gagal menganalisis aktor: ${error.message}",
+                        currentActorType = null,
+                        currentActorId = null
                     )
                 }
             }
+    }
+
+    private fun submitFeedback(isLike: Boolean) = intent {
+        val feedbackType = if (isLike) "LIKE" else "DISLIKE"
+
+        when (state.currentTab) {
+            FraudDetectionTab.CLAIM_ID, FraudDetectionTab.NEW_CLAIM -> {
+                val claimId = state.currentClaimId ?: return@intent
+                repository.submitClaimFeedback(claimId, feedbackType)
+                    .onSuccess {
+                        reduce { state.copy(feedbackGiven = true) }
+                    }
+                    .onFailure {
+                        // Silent fail for feedback
+                    }
+            }
+            FraudDetectionTab.ACTOR -> {
+                val actorType = state.currentActorType ?: return@intent
+                val actorId = state.currentActorId ?: return@intent
+                repository.submitActorFeedback(actorType, actorId, feedbackType)
+                    .onSuccess {
+                        reduce { state.copy(feedbackGiven = true) }
+                    }
+                    .onFailure {
+                        // Silent fail for feedback
+                    }
+            }
+        }
     }
 }

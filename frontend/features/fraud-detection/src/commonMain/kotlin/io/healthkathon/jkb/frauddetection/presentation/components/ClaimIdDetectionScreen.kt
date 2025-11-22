@@ -38,7 +38,8 @@ fun ClaimIdDetectionScreen(
     isLoading: Boolean,
     result: String?,
     onIntent: (FraudDetectionIntent) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    feedbackGiven: Boolean = false,
 ) {
     val formState = rememberClaimIdFormState()
     val scrollState = rememberScrollState()
@@ -119,7 +120,13 @@ fun ClaimIdDetectionScreen(
 
         AnimatedVisibility(visible = result != null) {
             result?.let {
-                MarkdownResultCard(markdown = it)
+                MarkdownResultCard(
+                    markdown = it,
+                    feedbackGiven = feedbackGiven,
+                    onFeedback = { isLike ->
+                        onIntent(FraudDetectionIntent.SubmitFeedback(isLike))
+                    }
+                )
             }
         }
 

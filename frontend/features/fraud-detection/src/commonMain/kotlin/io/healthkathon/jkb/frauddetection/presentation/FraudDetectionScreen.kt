@@ -83,11 +83,13 @@ private fun CompactFraudDetectionLayout(
                 FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    feedbackGiven = uiState.feedbackGiven,
                     onIntent = onIntent
                 )
                 FraudDetectionTab.NEW_CLAIM -> NewClaimDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
                     isLoadingData = uiState.isLoadingData,
@@ -97,6 +99,7 @@ private fun CompactFraudDetectionLayout(
                 FraudDetectionTab.ACTOR -> ActorDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
                     isLoadingData = uiState.isLoadingData,
@@ -170,11 +173,13 @@ private fun ExpandedFraudDetectionLayout(
                 FraudDetectionTab.CLAIM_ID -> ClaimIdDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    feedbackGiven = uiState.feedbackGiven,
                     onIntent = onIntent
                 )
                 FraudDetectionTab.NEW_CLAIM -> NewClaimDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
                     isLoadingData = uiState.isLoadingData,
@@ -184,6 +189,7 @@ private fun ExpandedFraudDetectionLayout(
                 FraudDetectionTab.ACTOR -> ActorDetectionScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
+                    feedbackGiven = uiState.feedbackGiven,
                     doctors = uiState.doctorsName,
                     hospitals = uiState.hospitalsName,
                     isLoadingData = uiState.isLoadingData,

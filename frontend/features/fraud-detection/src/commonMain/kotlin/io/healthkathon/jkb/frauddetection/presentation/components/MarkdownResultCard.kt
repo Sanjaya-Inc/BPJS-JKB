@@ -1,6 +1,8 @@
 package io.healthkathon.jkb.frauddetection.presentation.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,10 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -28,6 +32,8 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 fun MarkdownResultCard(
     markdown: String,
+    feedbackGiven: Boolean,
+    onFeedback: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -44,6 +50,20 @@ fun MarkdownResultCard(
                 .padding(20.dp)
         ) {
             MarkdownContent(markdown = markdown)
+            AnimatedContent(feedbackGiven, modifier = Modifier.padding(top = 32.dp)) {
+                if (!feedbackGiven) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    FeedbackButtons(onFeedback = onFeedback)
+                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "✅ Terima kasih atas feedback Anda!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }
@@ -293,5 +313,44 @@ private fun CodeBlock(code: String) {
             ),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+private fun FeedbackButtons(
+    onFeedback: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Apakah analisis ini benar?",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+
+        FilledTonalButton(
+            onClick = { onFeedback(true) },
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                text = "👍",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        FilledTonalButton(
+            onClick = { onFeedback(false) },
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(
+                text = "👎",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
     }
 }

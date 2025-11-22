@@ -1,10 +1,13 @@
 package io.healthkathon.jkb.frauddetection.data
 
 import io.healthkathon.jkb.frauddetection.data.model.ActorAnalysisRequest
+import io.healthkathon.jkb.frauddetection.data.model.ActorFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckAnswerData
 import io.healthkathon.jkb.frauddetection.data.model.ClaimCheckRequest
+import io.healthkathon.jkb.frauddetection.data.model.ClaimFeedbackRequest
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.DoctorResponse
+import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.data.model.HospitalResponse
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
@@ -423,6 +426,22 @@ Nov: ███████████████ 112 ⚠️
         return ClaimCheckAnswerData(
             answer = mockAnswer,
             status = "success"
+        )
+    }
+
+    override suspend fun submitClaimFeedback(feedbackRequest: ClaimFeedbackRequest): FeedbackResponse {
+        delay(500)
+        return FeedbackResponse(
+            status = "success",
+            message = "Terima kasih atas feedback Anda!"
+        )
+    }
+
+    override suspend fun submitActorFeedback(feedbackRequest: ActorFeedbackRequest): FeedbackResponse {
+        delay(500)
+        return FeedbackResponse(
+            status = "success",
+            message = "Terima kasih atas feedback Anda!"
         )
     }
 }
