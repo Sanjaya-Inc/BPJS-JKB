@@ -1,5 +1,6 @@
 package io.healthkathon.bpjs.jkb.presentation.screen
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -8,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,11 +58,25 @@ private fun SplashScreenContent(
                     contentDescription = null,
                     modifier = Modifier.size(155.dp)
                 )
-                Text(
-                    uiState.title,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
+                AnimatedContent(uiState.isLoading) { loading ->
+                    when (loading) {
+                        true -> CircularProgressIndicator()
+                        false -> Column {
+                            Text(
+                                uiState.title,
+                                modifier = Modifier.fillMaxWidth(),
+                                style = MaterialTheme.typography.displaySmall,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                uiState.version,
+                                modifier = Modifier.fillMaxWidth(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
             }
         }
     }
