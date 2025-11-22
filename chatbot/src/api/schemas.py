@@ -37,6 +37,16 @@ class Claim(BaseModel):
 class ClaimResponse(BaseModel):
     data: List[Claim]
 
+class Diagnosis(BaseModel):
+    diagnosis_id: str
+    icd10_code: str
+    name: str
+    avg_cost: float
+    severity_level: str
+
+class DiagnosisResponse(BaseModel):
+    data: List[Diagnosis]
+
 # Chatbot schemas
 class QuestionRequest(BaseModel):
     question: str = Field(..., description="User's question input", min_length=1)

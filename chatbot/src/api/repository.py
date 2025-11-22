@@ -111,3 +111,54 @@ class HealthcareRepository:
         ORDER BY c.id
         """
         return self.run_query(query, params)
+
+    def get_diagnoses(self, severity_level: Optional[str], icd10_code: Optional[str], 
+                     name: Optional[str], min_cost: Optional[float], max_cost: Optional[float]) -> List[Dict]:
+        query = "MATCH (d:Diagnosis)"
+        conditions = []
+        params = {}
+
+        if severity_level:
+            conditions.append("d.severity_level = $severity_level")
+            params["severity_level"] = severity_level
+        
+        if icd10_code:
+            conditions.append("d.icd10_code CONTAINS $icd10_code")
+            params["icd10_code"] = icd10_code
+            
+        if name:
+            conditions.append("toLower(d.name) CONTAINS toLower($name)")
+            params["name"] = name
+            
+        if min_cost:
+            conditions.append("d.avg_cost >= $min_cost")
+            params["min_cost"] = min_cost
+            
+        if max_cost:
+            conditions.append("d.avg_cost <= $max_cost")
+            params["max_cost"] = max_cost
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += """
+        RETURN d.node_id AS diagnosis_id,
+               d.icd10_code AS icd10_code,
+               d.name AS name,
+               d.avg_cost AS avg_cost,
+               d.severity_level AS severity_level
+        ORDER BY d.node_id
+        """
+        return self.run_query(query, params)
+
+    def get_diagnosis_by_id(self, diagnosis_id: str) -> List[Dict]:
+        query = """
+        MATCH (d:Diagnosis)
+        WHERE d.node_id = $diagnosis_id OR d.icd10_code = $diagnosis_id
+        RETURN d.node_id AS diagnosis_id,
+               d.icd10_code AS icd10_code,
+               d.name AS name,
+               d.avg_cost AS avg_cost,
+               d.severity_level AS severity_level
+        """
+        return self.run_query(query, {"diagnosis_id": diagnosis_id})

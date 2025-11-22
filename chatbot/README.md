@@ -7,6 +7,8 @@ A FastAPI-based REST API for accessing BPJS-JKB data from a Neo4j graph database
 - **GET /hospitals** - Retrieve hospital data with specialties and facilities
 - **GET /doctors** - Retrieve doctor information with hospital associations
 - **GET /claims** - Retrieve claims data with diagnosis and costs
+- **GET /diagnoses** - Retrieve diagnosis information with filtering capabilities
+- **GET /diagnoses/{diagnosis_id}** - Retrieve specific diagnosis details by ID or ICD-10 code
 - **POST /claims/verify** - AI-powered fraud detection for insurance claims
 - **POST /claims/verify-form** - AI-powered fraud detection for new claim form data
 - **POST /chatbot/ask** - Natural language querying with RAG-enhanced search
@@ -182,6 +184,91 @@ curl "http://localhost:8000/claims?doctor_id=DOC001"
       "total_cost": 65000000,
       "label": "NORMAL",
       "medical_resume_json": "Acute Myocardial Infarction. Chest pain radiating to left arm."
+    }
+  ]
+}
+```
+
+### GET /diagnoses
+
+Retrieve diagnosis information with filtering capabilities.
+
+**Query Parameters:**
+- `severity_level` (optional): Filter by severity level ("High", "Medium", "Low")
+- `icd10_code` (optional): Filter by ICD-10 code pattern
+- `name` (optional): Filter by diagnosis name (partial match)
+- `min_cost` (optional): Filter by minimum average cost
+- `max_cost` (optional): Filter by maximum average cost
+
+**Example Requests:**
+```bash
+# Get all diagnoses
+curl "http://localhost:8000/diagnoses"
+
+# Filter by severity level
+curl "http://localhost:8000/diagnoses?severity_level=High"
+
+# Filter by ICD-10 code pattern
+curl "http://localhost:8000/diagnoses?icd10_code=I21"
+
+# Filter by diagnosis name
+curl "http://localhost:8000/diagnoses?name=heart"
+
+# Filter by cost range
+curl "http://localhost:8000/diagnoses?min_cost=10000000&max_cost=50000000"
+
+# Combine multiple filters
+curl "http://localhost:8000/diagnoses?severity_level=High&min_cost=30000000"
+```
+
+**Example Response:**
+```json
+{
+  "data": [
+    {
+      "diagnosis_id": "D001",
+      "icd10_code": "I21.9",
+      "name": "Acute Myocardial Infarction (Heart Attack)",
+      "avg_cost": 65000000,
+      "severity_level": "High"
+    },
+    {
+      "diagnosis_id": "D013",
+      "icd10_code": "I63.9",
+      "name": "Cerebral Infarction (Stroke)",
+      "avg_cost": 55000000,
+      "severity_level": "High"
+    }
+  ]
+}
+```
+
+### GET /diagnoses/{diagnosis_id}
+
+Retrieve specific diagnosis details by diagnosis ID or ICD-10 code.
+
+**Path Parameters:**
+- `diagnosis_id`: Either the diagnosis node ID (e.g., "D001") or ICD-10 code (e.g., "I21.9")
+
+**Example Requests:**
+```bash
+# Get diagnosis by node ID
+curl "http://localhost:8000/diagnoses/D001"
+
+# Get diagnosis by ICD-10 code
+curl "http://localhost:8000/diagnoses/I21.9"
+```
+
+**Example Response:**
+```json
+{
+  "data": [
+    {
+      "diagnosis_id": "D001",
+      "icd10_code": "I21.9",
+      "name": "Acute Myocardial Infarction (Heart Attack)",
+      "avg_cost": 65000000,
+      "severity_level": "High"
     }
   ]
 }

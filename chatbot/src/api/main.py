@@ -11,7 +11,7 @@ from typing import Optional, AsyncGenerator
 # Imports
 from chatbot.src.database import db
 from .repository import HealthcareRepository
-from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse, ClaimFormVerificationRequest, ClaimFormVerificationResponse
+from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, DiagnosisResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse, ClaimFormVerificationRequest, ClaimFormVerificationResponse
 from .chatbot_service import ChatbotService
 from .claim_verification_service import ClaimVerificationService
 
@@ -120,6 +120,26 @@ def get_claims(
     repo: HealthcareRepository = Depends(get_repository)
 ):
     results = repo.get_claims(status, hospital_id, doctor_id)
+    return {"data": results}
+
+@app.get("/diagnoses", response_model=DiagnosisResponse, tags=["Diagnoses"])
+def get_diagnoses(
+    severity_level: Optional[str] = Query(None, description="Filter by severity level (High/Medium/Low)"),
+    icd10_code: Optional[str] = Query(None, description="Filter by ICD-10 code pattern"),
+    name: Optional[str] = Query(None, description="Filter by diagnosis name"),
+    min_cost: Optional[float] = Query(None, description="Filter by minimum cost"),
+    max_cost: Optional[float] = Query(None, description="Filter by maximum cost"),
+    repo: HealthcareRepository = Depends(get_repository)
+):
+    results = repo.get_diagnoses(severity_level, icd10_code, name, min_cost, max_cost)
+    return {"data": results}
+
+@app.get("/diagnoses/{diagnosis_id}", response_model=DiagnosisResponse, tags=["Diagnoses"])
+def get_diagnosis_by_id(
+    diagnosis_id: str,
+    repo: HealthcareRepository = Depends(get_repository)
+):
+    results = repo.get_diagnosis_by_id(diagnosis_id)
     return {"data": results}
 
 @app.post("/chatbot/ask", response_model=ChatbotResponse, tags=["Chatbot"])
