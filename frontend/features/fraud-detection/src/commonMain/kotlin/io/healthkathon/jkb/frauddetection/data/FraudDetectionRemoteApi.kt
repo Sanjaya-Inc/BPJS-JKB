@@ -3,6 +3,7 @@ package io.healthkathon.jkb.frauddetection.data
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.POST
+import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 import io.healthkathon.jkb.frauddetection.data.model.ActorAnalysisRequest
 import io.healthkathon.jkb.frauddetection.data.model.ActorFeedbackRequest
@@ -13,6 +14,7 @@ import io.healthkathon.jkb.frauddetection.data.model.ClaimsResponse
 import io.healthkathon.jkb.frauddetection.data.model.DiagnosisResponse
 import io.healthkathon.jkb.frauddetection.data.model.DoctorResponse
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
+import io.healthkathon.jkb.frauddetection.data.model.HospitalAnalysisResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalResponse
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimResponse
@@ -65,4 +67,9 @@ interface FraudDetectionRemoteApi {
     suspend fun submitActorFeedback(
         @Body feedbackRequest: ActorFeedbackRequest
     ): FeedbackResponse
+
+    @GET("hospitals/{hospital_id}/analyze")
+    suspend fun analyzeHospital(
+        @Path("hospital_id") hospitalId: String
+    ): HospitalAnalysisResponse
 }

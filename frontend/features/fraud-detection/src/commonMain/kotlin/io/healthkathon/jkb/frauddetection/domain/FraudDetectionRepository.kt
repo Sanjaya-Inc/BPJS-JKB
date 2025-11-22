@@ -139,4 +139,12 @@ class FraudDetectionRepository(
                 ?: persistentListOf()
         }
     }
+
+    suspend fun analyzeHospital(
+        hospitalId: String
+    ): Result<io.healthkathon.jkb.frauddetection.data.model.HospitalAnalysisResponse> {
+        return remoteApi.runCatching {
+            analyzeHospital(hospitalId)
+        }
+    }
 }

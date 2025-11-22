@@ -22,7 +22,7 @@ import io.healthkathon.jkb.core.presentation.preview.JKBPreview
 import io.healthkathon.jkb.core.presentation.theme.JKBTheme
 import io.healthkathon.jkb.frauddetection.presentation.components.ClaimIdDetectionScreen
 import io.healthkathon.jkb.frauddetection.presentation.components.NewClaimDetectionScreen
-import io.healthkathon.jkb.frauddetection.presentation.components.ActorDetectionScreen
+import io.healthkathon.jkb.frauddetection.presentation.components.HospitalAnalysisScreen
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
@@ -105,14 +105,15 @@ private fun CompactFraudDetectionLayout(
                     dataError = uiState.dataError,
                     onIntent = onIntent
                 )
-                FraudDetectionTab.ACTOR -> ActorDetectionScreen(
+                FraudDetectionTab.HOSPITAL_ANALYSIS -> HospitalAnalysisScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    feedbackGiven = uiState.feedbackGiven,
-                    doctors = uiState.doctorsName,
-                    hospitals = uiState.hospitalsName,
+                    hospitals = uiState.filteredHospitals,
+                    selectedHospitalId = uiState.selectedHospitalId,
+                    searchQuery = uiState.hospitalSearchQuery,
                     isLoadingData = uiState.isLoadingData,
                     dataError = uiState.dataError,
+                    feedbackGiven = uiState.feedbackGiven,
                     onIntent = onIntent
                 )
             }
@@ -203,14 +204,15 @@ private fun ExpandedFraudDetectionLayout(
                     dataError = uiState.dataError,
                     onIntent = onIntent
                 )
-                FraudDetectionTab.ACTOR -> ActorDetectionScreen(
+                FraudDetectionTab.HOSPITAL_ANALYSIS -> HospitalAnalysisScreen(
                     isLoading = uiState.isLoading,
                     result = uiState.result,
-                    feedbackGiven = uiState.feedbackGiven,
-                    doctors = uiState.doctorsName,
-                    hospitals = uiState.hospitalsName,
+                    hospitals = uiState.filteredHospitals,
+                    selectedHospitalId = uiState.selectedHospitalId,
+                    searchQuery = uiState.hospitalSearchQuery,
                     isLoadingData = uiState.isLoadingData,
                     dataError = uiState.dataError,
+                    feedbackGiven = uiState.feedbackGiven,
                     onIntent = onIntent
                 )
             }

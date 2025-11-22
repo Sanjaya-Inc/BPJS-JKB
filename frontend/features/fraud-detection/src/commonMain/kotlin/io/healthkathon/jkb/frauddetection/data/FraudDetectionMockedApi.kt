@@ -12,6 +12,8 @@ import io.healthkathon.jkb.frauddetection.data.model.DiagnosisResponse
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.DoctorResponse
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
+import io.healthkathon.jkb.frauddetection.data.model.HospitalAnalysisData
+import io.healthkathon.jkb.frauddetection.data.model.HospitalAnalysisResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.data.model.HospitalResponse
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
@@ -906,5 +908,175 @@ Nov: ███████████████ 112 ⚠️
         }
 
         return ClaimsResponse(data = filteredClaims)
+    }
+
+    override suspend fun analyzeHospital(hospitalId: String): HospitalAnalysisResponse {
+        delay(1200)
+
+        val hospitalAnalysisMap = mapOf(
+            "HOS002" to HospitalAnalysisResponse(
+                data = listOf(
+                    HospitalAnalysisData(
+                        diagnosisId = "N39.0",
+                        diagnosisName = "Urinary Tract Infection (UTI)",
+                        totalClaims = 1,
+                        zScore = 0.0
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "O82",
+                        diagnosisName = "Caesarean Section Delivery",
+                        totalClaims = 2,
+                        zScore = 0.0
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "I10",
+                        diagnosisName = "Essential Hypertension",
+                        totalClaims = 1,
+                        zScore = 0.0
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "J18.9",
+                        diagnosisName = "Pneumonia Unspecified",
+                        totalClaims = 1,
+                        zScore = 0.0
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "I63.9",
+                        diagnosisName = "Cerebral Infarction (Stroke)",
+                        totalClaims = 2,
+                        zScore = -0.45561165797767156
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "K35.80",
+                        diagnosisName = "Acute Appendicitis",
+                        totalClaims = 2,
+                        zScore = -0.5111019224618589
+                    )
+                ),
+                hospitalId = "HOS002",
+                hospitalName = "Santosa Hospital Bandung Central",
+                analysisType = "claiming_behavior_normal_distribution"
+            ),
+            "H001" to HospitalAnalysisResponse(
+                data = listOf(
+                    HospitalAnalysisData(
+                        diagnosisId = "E11",
+                        diagnosisName = "Diabetes Mellitus Type 2",
+                        totalClaims = 5,
+                        zScore = 0.25
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "J20",
+                        diagnosisName = "Acute Bronchitis",
+                        totalClaims = 3,
+                        zScore = -0.15
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "I10",
+                        diagnosisName = "Hypertension",
+                        totalClaims = 4,
+                        zScore = 0.0
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "K29",
+                        diagnosisName = "Gastritis",
+                        totalClaims = 2,
+                        zScore = -0.35
+                    )
+                ),
+                hospitalId = "H001",
+                hospitalName = "RS Harapan Sehat",
+                analysisType = "claiming_behavior_normal_distribution"
+            ),
+            "H002" to HospitalAnalysisResponse(
+                data = listOf(
+                    HospitalAnalysisData(
+                        diagnosisId = "K35",
+                        diagnosisName = "Appendicitis",
+                        totalClaims = 3,
+                        zScore = 0.45
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "S72",
+                        diagnosisName = "Fracture of Femur",
+                        totalClaims = 2,
+                        zScore = -0.25
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "H25",
+                        diagnosisName = "Cataract",
+                        totalClaims = 4,
+                        zScore = 0.15
+                    )
+                ),
+                hospitalId = "H002",
+                hospitalName = "RS Mitra Keluarga",
+                analysisType = "claiming_behavior_normal_distribution"
+            ),
+            "H003" to HospitalAnalysisResponse(
+                data = listOf(
+                    HospitalAnalysisData(
+                        diagnosisId = "I25",
+                        diagnosisName = "Coronary Artery Disease",
+                        totalClaims = 6,
+                        zScore = 0.85
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "I21",
+                        diagnosisName = "Acute Myocardial Infarction",
+                        totalClaims = 3,
+                        zScore = 0.55
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "N18",
+                        diagnosisName = "Chronic Kidney Disease",
+                        totalClaims = 2,
+                        zScore = 0.0
+                    )
+                ),
+                hospitalId = "H003",
+                hospitalName = "RS Siloam",
+                analysisType = "claiming_behavior_normal_distribution"
+            ),
+            "H004" to HospitalAnalysisResponse(
+                data = listOf(
+                    HospitalAnalysisData(
+                        diagnosisId = "O80",
+                        diagnosisName = "Normal Delivery",
+                        totalClaims = 8,
+                        zScore = 0.65
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "O82",
+                        diagnosisName = "Cesarean Section",
+                        totalClaims = 5,
+                        zScore = 0.35
+                    ),
+                    HospitalAnalysisData(
+                        diagnosisId = "J45",
+                        diagnosisName = "Asthma",
+                        totalClaims = 2,
+                        zScore = -0.15
+                    )
+                ),
+                hospitalId = "H004",
+                hospitalName = "RS Hermina",
+                analysisType = "claiming_behavior_normal_distribution"
+            )
+        )
+
+        return hospitalAnalysisMap[hospitalId] ?: HospitalAnalysisResponse(
+            data = listOf(
+                HospitalAnalysisData(
+                    diagnosisId = "UNKNOWN",
+                    diagnosisName = "No Data Available",
+                    totalClaims = 0,
+                    zScore = 0.0
+                )
+            ),
+            hospitalId = hospitalId,
+            hospitalName = "Unknown Hospital",
+            analysisType = "claiming_behavior_normal_distribution"
+        )
     }
 }

@@ -16,6 +16,9 @@ data class FraudDetectionUiState(
     val isLoading: Boolean = false,
     val result: String? = null,
     val hospitals: PersistentList<HospitalData> = persistentListOf(),
+    val filteredHospitals: PersistentList<HospitalData> = persistentListOf(),
+    val selectedHospitalId: String? = null,
+    val hospitalSearchQuery: String = "",
     val doctors: PersistentList<DoctorData> = persistentListOf(),
     val diagnoses: PersistentList<DiagnosisData> = persistentListOf(),
     val claims: PersistentList<ClaimData> = persistentListOf(),
@@ -25,6 +28,7 @@ data class FraudDetectionUiState(
     val isLoadingData: Boolean = false,
     val dataError: String? = null,
     val currentClaimId: String? = null,
+    val currentHospitalId: String? = null,
     val currentActorType: String? = null,
     val currentActorId: String? = null,
     val feedbackGiven: Boolean = false
@@ -38,7 +42,7 @@ data class FraudDetectionUiState(
 enum class FraudDetectionTab(val title: String, val icon: String) {
     CLAIM_ID("Klaim ID", "🔍"),
     NEW_CLAIM("Klaim Baru", "📝"),
-    ACTOR("Analisis Aktor", "👤")
+    HOSPITAL_ANALYSIS("Analisis RS", "🏥")
 }
 
 enum class ActorType(val displayName: String) {
@@ -52,6 +56,9 @@ sealed interface FraudDetectionIntent {
     data class SelectClaim(val claimId: String) : FraudDetectionIntent
     data object SubmitSelectedClaim : FraudDetectionIntent
     data class SearchClaims(val query: String) : FraudDetectionIntent
+    data class SelectHospital(val hospitalId: String) : FraudDetectionIntent
+    data class SearchHospitals(val query: String) : FraudDetectionIntent
+    data object SubmitHospitalAnalysis : FraudDetectionIntent
     data class SubmitNewClaim(
         val hospitalId: String,
         val doctorId: String,
@@ -82,6 +89,9 @@ class FraudDetectionViewModel(
             is FraudDetectionIntent.SelectClaim -> selectClaim(intent.claimId)
             is FraudDetectionIntent.SubmitSelectedClaim -> submitSelectedClaim()
             is FraudDetectionIntent.SearchClaims -> searchClaims(intent.query)
+            is FraudDetectionIntent.SelectHospital -> selectHospital(intent.hospitalId)
+            is FraudDetectionIntent.SearchHospitals -> searchHospitals(intent.query)
+            is FraudDetectionIntent.SubmitHospitalAnalysis -> submitHospitalAnalysis()
             is FraudDetectionIntent.SubmitNewClaim -> submitNewClaim(
                 intent.hospitalId,
                 intent.doctorId,
@@ -108,7 +118,13 @@ class FraudDetectionViewModel(
 
         repository.getHospitals()
             .onSuccess { hospitals ->
-                reduce { state.copy(hospitals = hospitals, isLoadingData = false) }
+                reduce {
+                    state.copy(
+                        hospitals = hospitals,
+                        filteredHospitals = hospitals,
+                        isLoadingData = false
+                    )
+                }
             }
             .onFailure { error ->
                 reduce {
@@ -227,6 +243,196 @@ class FraudDetectionViewModel(
             }
     }
 
+    private fun selectHospital(hospitalId: String) = intent {
+        reduce {
+            state.copy(selectedHospitalId = hospitalId)
+        }
+    }
+
+    private fun searchHospitals(query: String) = intent {
+        reduce {
+            val filtered = if (query.isBlank()) {
+                state.hospitals
+            } else {
+                state.hospitals.filter { hospital ->
+                    hospital.name?.contains(query, ignoreCase = true) == true ||
+                        hospital.hospitalId?.contains(query, ignoreCase = true) == true ||
+                        hospital.classType?.contains(query, ignoreCase = true) == true
+                }.toPersistentList()
+            }
+            state.copy(hospitalSearchQuery = query, filteredHospitals = filtered)
+        }
+    }
+
+    private fun submitHospitalAnalysis() = intent {
+        val hospitalId = state.selectedHospitalId ?: return@intent
+
+        reduce { state.copy(isLoading = true, result = null, feedbackGiven = false) }
+
+        repository.analyzeHospital(hospitalId)
+            .onSuccess { response ->
+                val formattedResult = formatHospitalAnalysisResult(response)
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = formattedResult,
+                        currentHospitalId = hospitalId,
+                        currentClaimId = null,
+                        currentActorType = null,
+                        currentActorId = null,
+                        feedbackGiven = false
+                    )
+                }
+            }
+            .onFailure { error ->
+                reduce {
+                    state.copy(
+                        isLoading = false,
+                        result = "❌ Gagal menganalisis rumah sakit: ${error.message}",
+                        currentHospitalId = null
+                    )
+                }
+            }
+    }
+
+    private fun formatDouble(value: Double, decimals: Int = 2): String {
+        val multiplier = when (decimals) {
+            1 -> 10.0
+            2 -> 100.0
+            3 -> 1000.0
+            else -> 100.0
+        }
+        val rounded = (value * multiplier).toLong().toDouble() / multiplier
+        return rounded.toString()
+    }
+
+    private fun formatHospitalAnalysisResult(
+        response: io.healthkathon.jkb.frauddetection.data.model.HospitalAnalysisResponse
+    ): String {
+        val diagnosisData = response.data ?: emptyList()
+
+        val highRiskDiagnoses = diagnosisData.filter { it.zScore > 2.0 }
+        val moderateRiskDiagnoses = diagnosisData.filter { it.zScore > 1.0 && it.zScore <= 2.0 }
+        val normalDiagnoses = diagnosisData.filter { it.zScore <= 1.0 }
+
+        return buildString {
+            appendLine("# 🏥 Analisis Pola Klaim Rumah Sakit")
+            appendLine()
+            appendLine("## 📊 Informasi Rumah Sakit")
+            appendLine("**Nama**: ${response.hospitalName}")
+            appendLine("**ID**: ${response.hospitalId}")
+            appendLine(
+                "**Tipe Analisis**: ${
+                    response.analysisType.replace("_", " ")
+                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                }"
+            )
+            appendLine()
+            appendLine("---")
+            appendLine()
+
+            if (highRiskDiagnoses.isNotEmpty()) {
+                appendLine("## 🔴 Diagnosis Risiko Tinggi (Z-Score > 2.0)")
+                appendLine()
+                appendLine("Diagnosis dengan pola klaim yang **sangat tidak normal**:")
+                appendLine()
+                highRiskDiagnoses.forEach { diagnosis ->
+                    appendLine("### 🚨 ${diagnosis.diagnosisName}")
+                    appendLine("- **Kode ICD-10**: ${diagnosis.diagnosisId}")
+                    appendLine("- **Total Klaim**: ${diagnosis.totalClaims}")
+                    appendLine("- **Z-Score**: **${formatDouble(diagnosis.zScore)}** ⚠️")
+                    appendLine("- **Status**: Memerlukan investigasi segera")
+                    appendLine()
+                }
+                appendLine("---")
+                appendLine()
+            }
+
+            if (moderateRiskDiagnoses.isNotEmpty()) {
+                appendLine("## 🟠 Diagnosis Risiko Sedang (Z-Score 1.0 - 2.0)")
+                appendLine()
+                appendLine("Diagnosis dengan pola klaim yang **perlu perhatian**:")
+                appendLine()
+                moderateRiskDiagnoses.forEach { diagnosis ->
+                    appendLine("### ⚠️ ${diagnosis.diagnosisName}")
+                    appendLine("- **Kode ICD-10**: ${diagnosis.diagnosisId}")
+                    appendLine("- **Total Klaim**: ${diagnosis.totalClaims}")
+                    appendLine("- **Z-Score**: **${formatDouble(diagnosis.zScore)}**")
+                    appendLine("- **Status**: Monitoring diperlukan")
+                    appendLine()
+                }
+                appendLine("---")
+                appendLine()
+            }
+
+            if (normalDiagnoses.isNotEmpty()) {
+                appendLine("## ✅ Diagnosis Normal (Z-Score ≤ 1.0)")
+                appendLine()
+                appendLine("Diagnosis dengan pola klaim yang **normal**:")
+                appendLine()
+                normalDiagnoses.forEach { diagnosis ->
+                    appendLine("### ${diagnosis.diagnosisName}")
+                    appendLine("- **Kode ICD-10**: ${diagnosis.diagnosisId}")
+                    appendLine("- **Total Klaim**: ${diagnosis.totalClaims}")
+                    appendLine("- **Z-Score**: ${formatDouble(diagnosis.zScore)}")
+                    appendLine()
+                }
+                appendLine("---")
+                appendLine()
+            }
+
+            appendLine("## 📈 Ringkasan Analisis")
+            appendLine()
+            appendLine("| Kategori | Jumlah Diagnosis |")
+            appendLine("|----------|------------------|")
+            appendLine("| 🔴 Risiko Tinggi | ${highRiskDiagnoses.size} |")
+            appendLine("| 🟠 Risiko Sedang | ${moderateRiskDiagnoses.size} |")
+            appendLine("| ✅ Normal | ${normalDiagnoses.size} |")
+            appendLine("| **Total** | **${diagnosisData.size}** |")
+            appendLine()
+            appendLine("---")
+            appendLine()
+
+            appendLine("## 💡 Interpretasi Z-Score")
+            appendLine()
+            appendLine("**Z-Score** mengukur seberapa jauh pola klaim rumah sakit menyimpang dari rata-rata normal:")
+            appendLine()
+            appendLine("- **Z-Score > 2.0**: Pola klaim sangat tidak normal, memerlukan investigasi segera")
+            appendLine("- **Z-Score 1.0 - 2.0**: Pola klaim sedikit tidak normal, perlu monitoring")
+            appendLine("- **Z-Score ≤ 1.0**: Pola klaim dalam batas normal")
+            appendLine("- **Z-Score negatif**: Klaim lebih rendah dari rata-rata (bisa jadi baik)")
+            appendLine()
+
+            if (highRiskDiagnoses.isNotEmpty() || moderateRiskDiagnoses.isNotEmpty()) {
+                appendLine("---")
+                appendLine()
+                appendLine("## 🎯 Rekomendasi Tindakan")
+                appendLine()
+                if (highRiskDiagnoses.isNotEmpty()) {
+                    appendLine("### Prioritas Tinggi")
+                    appendLine("1. Lakukan audit mendalam untuk diagnosis dengan Z-Score > 2.0")
+                    appendLine("2. Verifikasi dokumentasi medis dan klaim terkait")
+                    appendLine("3. Wawancara dengan pihak rumah sakit")
+                    appendLine()
+                }
+                if (moderateRiskDiagnoses.isNotEmpty()) {
+                    appendLine("### Prioritas Sedang")
+                    appendLine("1. Monitor pola klaim untuk diagnosis dengan Z-Score 1.0-2.0")
+                    appendLine("2. Review sampling klaim secara berkala")
+                    appendLine("3. Edukasi standar klaim kepada rumah sakit")
+                    appendLine()
+                }
+            }
+
+            appendLine("---")
+            appendLine()
+            appendLine(
+                "**Catatan**: Analisis ini menggunakan distribusi normal untuk " +
+                    "mendeteksi anomali dalam pola klaim rumah sakit."
+            )
+        }
+    }
+
     private fun navigateToTab(tab: FraudDetectionTab) = intent {
         reduce {
             state.copy(
@@ -234,6 +440,7 @@ class FraudDetectionViewModel(
                 result = null,
                 feedbackGiven = false,
                 currentClaimId = null,
+                currentHospitalId = null,
                 currentActorType = null,
                 currentActorId = null
             )
@@ -375,10 +582,9 @@ ${response.explanation}
                         reduce { state.copy(feedbackGiven = true) }
                     }
             }
-            FraudDetectionTab.ACTOR -> {
-                val actorType = state.currentActorType ?: return@intent
-                val actorId = state.currentActorId ?: return@intent
-                repository.submitActorFeedback(actorType, actorId, feedbackType)
+            FraudDetectionTab.HOSPITAL_ANALYSIS -> {
+                val hospitalId = state.currentHospitalId ?: return@intent
+                repository.submitActorFeedback("HOSPITAL", hospitalId, feedbackType)
                     .onSuccess {
                         reduce { state.copy(feedbackGiven = true) }
                     }
