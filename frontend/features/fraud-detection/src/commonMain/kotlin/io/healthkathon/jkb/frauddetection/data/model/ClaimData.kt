@@ -18,5 +18,5 @@ data class ClaimData(
     @SerialName("label")
     val label: String,
     @SerialName("medical_resume_json")
-    val medicalResumeJson: String
+    val medicalResumeJson: String? = null
 )

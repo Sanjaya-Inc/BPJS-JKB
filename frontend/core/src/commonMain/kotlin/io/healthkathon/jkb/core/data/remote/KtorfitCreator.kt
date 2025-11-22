@@ -2,6 +2,7 @@ package io.healthkathon.jkb.core.data.remote
 
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -20,6 +21,11 @@ class KtorfitCreator(
     fun create(): Ktorfit {
         return Ktorfit.Builder()
             .httpClient(createHttpEngine()) {
+                install(HttpTimeout) {
+                    requestTimeoutMillis = 600_000
+                    connectTimeoutMillis = 600_000
+                    socketTimeoutMillis = 600_000
+                }
                 install(ContentNegotiation) {
                     json(json, contentType = ContentType.Application.Json)
                 }
