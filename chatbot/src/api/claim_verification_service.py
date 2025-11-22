@@ -134,6 +134,21 @@ RETURN h.id AS hospital_id,
        collect(DISTINCT s.name) AS specialties,
        collect(DISTINCT f.name) AS facilities;
         """
+        
+        # Additional queries for form verification (from notebook)
+        self.golden_query_get_procedure_costs = """
+MATCH (p:Procedure)
+WHERE p.name IN ['<primary_procedure>', '<secondary_procedure>']
+RETURN p.name AS procedure_name,
+       p.avg_cost AS avg_cost
+        """
+
+        self.golden_query_get_diagnosis_cost = """
+MATCH (d:Diagnosis {code: '<diagnosis_id>'})
+RETURN d.code AS diagnosis_code,
+       d.name AS diagnosis_name,
+       d.avg_cost AS avg_cost
+        """
 
     def clean_llm_response(self, content: str) -> str:
         """Clean LLM response by removing thinking tags and unwanted content."""
@@ -154,6 +169,162 @@ RETURN h.id AS hospital_id,
         content = re.sub(r'<[^>]+>', '', content)
         
         return content.strip()
+
+    def verify_form_data(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Verify form input data using the exact logic from dani-verify-claim-form.ipynb notebook.
+        
+        Args:
+            form_data: Dictionary containing form input data
+            
+        Returns:
+            Dictionary containing the verification result and metadata
+        """
+        try:
+            # Format form input for display (exact copy from notebook)
+            form_summary = f"""
+Hospital ID: {form_data['hospital_id']}
+Doctor ID: {form_data['doctor_id']}
+Diagnosis ID: {form_data['diagnosa_id']}
+Total Cost: {form_data['total_cost']:,}
+Primary Procedure: {form_data['primary_procedure']}
+Secondary Procedure: {form_data.get('secondary_procedure', 'None')}
+Diagnosis Text: {form_data['diagnosis_text']}
+"""
+
+            # Prepare messages following the notebook pattern (exact copy from notebook)
+            message = [
+                HumanMessage(f"This is a medical claim form with the following data: {form_summary}"),
+                HumanMessage(f"""
+
+    Please validate this claim form data following these steps. Be objective and allow for reasonable operational variances.
+
+
+
+    **Form Data Details:**
+
+    - Hospital ID: {form_data['hospital_id']}
+
+    - Doctor ID: {form_data['doctor_id']}
+
+    - Diagnosis ID: {form_data['diagnosa_id']}
+
+    - Total Cost: {form_data['total_cost']:,}
+
+    - Primary Procedure: {form_data['primary_procedure']}
+
+    - Secondary Procedure: {form_data.get('secondary_procedure', 'None')}
+
+    - Diagnosis Text: {form_data['diagnosis_text']}
+
+
+
+    **Validation Steps (Apply these rules strictly in order)**:
+
+
+
+    1. **Procedure Consistency**: 
+
+       Check if the procedures are clinically appropriate for the diagnosis.
+
+       - *Logic*: Use the relation from {self.golden_query_to_get_diagnose_and_procedure_relation} (replace '<diagnosis_id>' with '{form_data['diagnosa_id']}').
+
+       - *Guidance*: If the procedures are standard diagnostic tools for the diagnosis (e.g., CT Scan/MRI for Stroke), it is a MATCH.
+
+
+
+    2. **Cost Analysis (The 20% Rule)**: 
+
+       Compare the Form's Total Cost vs. Ground Truth (Sum of Diagnosis Avg Cost + Procedure Avg Costs).
+
+       - *Logic*: Calculate the deviation: `(Form_Cost - Ground_Truth) / Ground_Truth`.
+
+       - *Guidance*: 
+
+          - If deviation is **< 20%**: Consider this **NORMAL** operational variance (e.g., room upgrades, extra meds). Do NOT flag as fraud based on cost alone.
+
+          - If deviation is **> 20%**: Flag as **FRAUD** (Cost significantly inflated).
+
+       - Use these queries to get ground truth:
+
+         * Diagnosis cost: {self.golden_query_get_diagnosis_cost} (replace '<diagnosis_id>' with '{form_data['diagnosa_id']}')
+
+         * Procedure costs: {self.golden_query_get_procedure_costs} (replace '<primary_procedure>' with '{form_data['primary_procedure']}' and '<secondary_procedure>' with '{form_data.get('secondary_procedure', '')}')
+
+
+
+    3. **Doctor Qualification (GP Exception)**: 
+
+       Check if the doctor is qualified.
+
+       - *Logic*: Use {self.golden_query_get_specialisties_doctor} (replace '<doctor_id>' with '{form_data['doctor_id']}').
+
+       - *Guidance*: 
+
+          - **GPs (General Practitioners)** are VALID for initial diagnoses, consultations, and ordering standard scans (like MRI/CT), even for complex conditions like Stroke. 
+
+          - Flag as **FRAUD** only if there is a **hard contradiction** (e.g., a Pediatrician performing Major Surgery, or an Ophthalmologist treating Heart Attack).
+
+
+
+    4. **Hospital Capability**: 
+
+       Check if the hospital has relevant facilities.
+
+       - *Logic*: Use {self.golden_query_get_specialties_and_facilities_hospital} (replace '<hospital_id>' with '{form_data['hospital_id']}').
+
+       - *Guidance*: Look for broad keyword matches. For example, if Diagnosis is "Stroke", facilities like "ICU", "Neurology", or "Internal Medicine" are sufficient evidence of capability.
+
+
+
+    5. **Final Verdict**:
+
+       Based on the above, determine FRAUD or NORMAL.
+
+       - Provide a confidence score (0-100%).
+
+       - Provide the Form Data Summary.
+
+       - **Explanation**: You MUST explicitly state the cost deviation percentage in your explanation (e.g., "Cost is 4.5% higher, which is within the acceptable 20% variance").
+
+    """)
+            ]
+            
+            # Combine base chat history with current message
+            final_messages = self.base_chat_history + message
+            
+            # Create callback handler instance
+            callback_handler = ToolExecutionPrinter()
+            
+            # Execute the agent with logging
+            print(f"[VERIFY_LOG] Processing form data verification")
+            response = self.agent_executor.invoke(
+                {"messages": final_messages},
+                config={"callbacks": [callback_handler]}
+            )
+            
+            # Extract raw content from response
+            raw_content = response['messages'][-1].content
+            
+            # Clean the response
+            final_output = self.clean_llm_response(raw_content)
+            
+            # Parse the structured output to extract components
+            return self._parse_form_verification_output(final_output, form_data, raw_content, form_summary)
+            
+        except Exception as e:
+            return {
+                "form_data_summary": f"Error processing form data: {form_data}",
+                "validation_result": "ERROR",
+                "confidence_score": 0,
+                "detail_analysis": f"Error during verification: {str(e)}",
+                "explanation": f"Error during verification: {str(e)}",
+                "status": "error",
+                "metadata": {
+                    "error": str(e),
+                    "input_form_data": form_data
+                }
+            }
 
     def verify_claim(self, claim_id: str) -> Dict[str, Any]:
         """
@@ -312,6 +483,67 @@ RETURN h.id AS hospital_id,
                 "metadata": {
                     "error": str(e),
                     "input_claim_id": claim_id,
+                    "raw_response": raw_content,
+                    "parsed_successfully": False
+                }
+            }
+
+    def _parse_form_verification_output(self, output: str, form_data: Dict[str, Any], raw_content: str, form_summary: str) -> Dict[str, Any]:
+        """
+        Parse the LLM output for form verification to extract structured results.
+        
+        Args:
+            output: Cleaned output from the LLM
+            form_data: Original form input data
+            raw_content: Raw response for debugging
+            form_summary: Formatted form summary
+            
+        Returns:
+            Structured form verification result
+        """
+        try:
+            # Default values
+            validation_result = "UNKNOWN"
+            confidence_score = 0
+            detail_analysis = output
+            explanation = output
+            
+            # Extract validation result (FRAUD or NORMAL)
+            if "FRAUD" in output.upper():
+                validation_result = "FRAUD"
+            elif "NORMAL" in output.upper():
+                validation_result = "NORMAL"
+            
+            # Extract confidence score
+            confidence_match = re.search(r'confidence.*?(\d+)', output, re.IGNORECASE)
+            if confidence_match:
+                confidence_score = int(confidence_match.group(1))
+            
+            return {
+                "form_data_summary": form_summary.strip(),
+                "validation_result": validation_result,
+                "confidence_score": confidence_score,
+                "detail_analysis": detail_analysis,
+                "explanation": explanation,
+                "status": "success",
+                "metadata": {
+                    "raw_response": raw_content,
+                    "input_form_data": form_data,
+                    "parsed_successfully": True
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "form_data_summary": form_summary.strip(),
+                "validation_result": "ERROR",
+                "confidence_score": 0,
+                "detail_analysis": f"Error parsing verification result: {str(e)}",
+                "explanation": f"Error parsing verification result: {str(e)}\n\nRaw output: {output}",
+                "status": "error",
+                "metadata": {
+                    "error": str(e),
+                    "input_form_data": form_data,
                     "raw_response": raw_content,
                     "parsed_successfully": False
                 }

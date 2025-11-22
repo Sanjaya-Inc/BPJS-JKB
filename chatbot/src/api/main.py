@@ -11,7 +11,7 @@ from typing import Optional, AsyncGenerator
 # Imports
 from chatbot.src.database import db
 from .repository import HealthcareRepository
-from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse
+from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse, ClaimFormVerificationRequest, ClaimFormVerificationResponse
 from .chatbot_service import ChatbotService
 from .claim_verification_service import ClaimVerificationService
 
@@ -160,3 +160,48 @@ def verify_claim(
     """
     result = verification_service.verify_claim(request.claim_id)
     return ClaimVerificationResponse(**result)
+
+@app.post("/claims/verify-form", response_model=ClaimFormVerificationResponse, tags=["Claims"])
+def verify_claim_form(
+    request: ClaimFormVerificationRequest,
+    verification_service: ClaimVerificationService = Depends(get_verification_service)
+):
+    """
+    Verify new claim form data for fraud detection using AI-powered medical knowledge graph analysis.
+    
+    This endpoint replicates the functionality from the dani-verify-claim-form.ipynb notebook,
+    implementing the same multi-step validation process for raw form input data:
+    
+    1. Procedure Consistency: Validates procedures are appropriate for the diagnosis
+    2. Cost Analysis: Applies 20% variance rule comparing form cost vs ground truth
+    3. Doctor Qualification: Validates doctor specialization (with GP exception rules)
+    4. Hospital Capability: Ensures hospital has required facilities for the diagnosis
+    5. Final Verdict: Returns FRAUD/NORMAL with confidence score and detailed explanation
+    
+    Unlike /claims/verify which works with existing claim IDs, this endpoint processes 
+    new form data before it becomes a claim in the database.
+    
+    Example form input:
+    {
+        "hospital_id": "H001",
+        "doctor_id": "D001", 
+        "diagnosa_id": "I63",
+        "total_cost": 15000000,
+        "primary_procedure": "CT Scan",
+        "secondary_procedure": "MRI",
+        "diagnosis_text": "Cerebral infarction"
+    }
+    """
+    # Convert Pydantic model to dictionary for service method
+    form_data = {
+        "hospital_id": request.hospital_id,
+        "doctor_id": request.doctor_id,
+        "diagnosa_id": request.diagnosa_id,
+        "total_cost": request.total_cost,
+        "primary_procedure": request.primary_procedure,
+        "secondary_procedure": request.secondary_procedure,
+        "diagnosis_text": request.diagnosis_text
+    }
+    
+    result = verification_service.verify_form_data(form_data)
+    return ClaimFormVerificationResponse(**result)

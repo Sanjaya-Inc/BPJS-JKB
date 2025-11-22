@@ -57,3 +57,22 @@ class ClaimVerificationResponse(BaseModel):
     detail_claim_data: dict = Field(..., description="Detailed claim data from the database")
     explanation: str = Field(..., description="Detailed explanation of the validation")
     status: str = Field(default="success", description="Response status")
+
+# Form Verification schemas
+class ClaimFormVerificationRequest(BaseModel):
+    hospital_id: str = Field(..., description="Hospital ID", min_length=1)
+    doctor_id: str = Field(..., description="Doctor ID", min_length=1)
+    diagnosa_id: str = Field(..., description="Diagnosis ID (ICD-10 code)", min_length=1)
+    total_cost: float = Field(..., description="Total cost of the claim", gt=0)
+    primary_procedure: str = Field(..., description="Primary medical procedure", min_length=1)
+    secondary_procedure: Optional[str] = Field(None, description="Secondary medical procedure")
+    diagnosis_text: str = Field(..., description="Diagnosis description text", min_length=1)
+
+class ClaimFormVerificationResponse(BaseModel):
+    form_data_summary: str = Field(..., description="Summary of the input form data")
+    validation_result: str = Field(..., description="Validation result: FRAUD or NORMAL")
+    confidence_score: int = Field(..., description="Confidence score between 0-100%")
+    detail_analysis: str = Field(..., description="Detailed analysis of the validation")
+    explanation: str = Field(..., description="Detailed explanation of the validation")
+    status: str = Field(default="success", description="Response status")
+    metadata: Optional[dict] = Field(default=None, description="Additional metadata from processing")

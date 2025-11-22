@@ -8,6 +8,7 @@ A FastAPI-based REST API for accessing BPJS-JKB data from a Neo4j graph database
 - **GET /doctors** - Retrieve doctor information with hospital associations
 - **GET /claims** - Retrieve claims data with diagnosis and costs
 - **POST /claims/verify** - AI-powered fraud detection for insurance claims
+- **POST /claims/verify-form** - AI-powered fraud detection for new claim form data
 - **POST /chatbot/ask** - Natural language querying with RAG-enhanced search
 - **Filtering Support** - Query parameters for filtering results
 - **Neo4j Integration** - Direct queries to graph database
@@ -238,6 +239,82 @@ curl -X POST "http://localhost:8000/claims/verify" \
 - `detail_claim_data`: Detailed claim information from database
 - `explanation`: Human-readable explanation of the analysis
 - `status`: API response status
+
+### POST /claims/verify-form
+
+**AI-powered fraud detection for new claim form data.** This endpoint verifies raw form input data before it becomes a claim in the database, using the same validation logic as the claim verification endpoint.
+
+**Request Body:**
+```json
+{
+  "hospital_id": "H001",
+  "doctor_id": "D001", 
+  "diagnosa_id": "I63",
+  "total_cost": 15000000,
+  "primary_procedure": "CT Scan",
+  "secondary_procedure": "MRI",
+  "diagnosis_text": "Cerebral infarction"
+}
+```
+
+**Validation Process:**
+The system performs the same multi-step analysis as claim verification:
+1. **Procedure Consistency**: Validates procedures are appropriate for the diagnosis
+2. **Cost Analysis**: Applies 20% variance rule comparing form cost vs ground truth
+3. **Doctor Qualification**: Validates doctor specialization (with GP exception rules)
+4. **Hospital Capability**: Ensures hospital has required facilities for the diagnosis
+5. **Final Verdict**: Returns FRAUD/NORMAL with confidence score and detailed explanation
+
+**Key Differences from `/claims/verify`:**
+- Works with **raw form data** instead of existing claim IDs
+- Validates **new claims** before they enter the database
+- Uses form input fields directly for validation
+- Same validation logic but different data source
+
+**Example Request:**
+```bash
+curl -X POST "http://localhost:8000/claims/verify-form" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "hospital_id": "H001",
+       "doctor_id": "D001", 
+       "diagnosa_id": "I63",
+       "total_cost": 15000000,
+       "primary_procedure": "CT Scan",
+       "secondary_procedure": "MRI",
+       "diagnosis_text": "Cerebral infarction"
+     }'
+```
+
+**Example Response:**
+```json
+{
+  "form_data_summary": "Hospital ID: H001\nDoctor ID: D001\nDiagnosis ID: I63\nTotal Cost: 15,000,000\nPrimary Procedure: CT Scan\nSecondary Procedure: MRI\nDiagnosis Text: Cerebral infarction",
+  "validation_result": "NORMAL",
+  "confidence_score": 92,
+  "detail_analysis": "Procedure consistency verified: CT Scan and MRI are appropriate for stroke diagnosis. Cost deviation is 8.5% above ground truth, within acceptable 20% variance. Doctor qualification verified for general practitioner. Hospital has required neurology facilities.",
+  "explanation": "Form data validated successfully. Cost is 8.5% higher than expected ground truth (13,850,000), which is within the acceptable 20% variance. All validation checks passed.",
+  "status": "success"
+}
+```
+
+**Response Fields:**
+- `form_data_summary`: Summary of the input form data
+- `validation_result`: Either "FRAUD", "NORMAL", or "ERROR"
+- `confidence_score`: Confidence level (0-100%)
+- `detail_analysis`: Detailed analysis of the validation
+- `explanation`: Human-readable explanation of the validation
+- `status`: API response status
+- `metadata`: Additional processing information
+
+**Request Fields:**
+- `hospital_id` (required): Hospital identifier
+- `doctor_id` (required): Doctor identifier  
+- `diagnosa_id` (required): Diagnosis ID (ICD-10 code)
+- `total_cost` (required): Total cost of the claim (must be > 0)
+- `primary_procedure` (required): Primary medical procedure
+- `secondary_procedure` (optional): Secondary medical procedure
+- `diagnosis_text` (required): Diagnosis description text
 
 ### POST /chatbot/ask
 
