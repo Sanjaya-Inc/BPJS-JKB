@@ -310,9 +310,9 @@ private fun SuggestedQuestions(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(12.dp))
 
         listOf(
-            "🔍 Bagaimana cara cek status klaim?",
-            "⚠️ Apa saja indikator fraud?",
-            "📊 Tampilkan statistik fraud bulan ini"
+            "Berapa jumlah claim dari serangan jantung",
+            "Siapa saja dokter yang bertugas di rumah sakit melinda",
+            "Berapa jumlah claim untuk heart attack"
         ).forEach { question ->
             Card(
                 modifier = Modifier
