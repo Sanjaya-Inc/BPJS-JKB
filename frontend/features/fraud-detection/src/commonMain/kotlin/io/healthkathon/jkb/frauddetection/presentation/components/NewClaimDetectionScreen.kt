@@ -45,17 +45,6 @@ fun NewClaimDetectionScreen(
     feedbackGiven: Boolean = false,
 ) {
     val formState = rememberNewClaimFormState()
-
-    val diagnoses = listOf(
-        "Diabetes Mellitus Type 2",
-        "Hipertensi",
-        "ISPA (Infeksi Saluran Pernapasan Akut)",
-        "Gastritis",
-        "Demam Berdarah Dengue",
-        "Appendicitis",
-        "Pneumonia"
-    )
-
     val scrollState = rememberScrollState()
 
     Column(
@@ -105,71 +94,6 @@ fun NewClaimDetectionScreen(
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
-
-        ExposedDropdownMenuBox(
-            expanded = formState.claimIdExpanded,
-            onExpandedChange = {
-                if (!formState.claimIdExpanded && claims.isEmpty() && !isLoadingData) {
-                    onIntent(FraudDetectionIntent.LoadClaims)
-                }
-                formState.claimIdExpanded = !formState.claimIdExpanded && !isLoading && !isLoadingData
-            }
-        ) {
-            OutlinedTextField(
-                value = formState.claimId,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Claim ID") },
-                placeholder = {
-                    Text(
-                        if (isLoadingData) {
-                            "Memuat data..."
-                        } else {
-                            "Pilih Claim ID"
-                        }
-                    )
-                },
-                trailingIcon = {
-                    if (isLoadingData && claims.isEmpty()) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.claimIdExpanded)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                enabled = !isLoading && !isLoadingData && claims.isNotEmpty(),
-                shape = RoundedCornerShape(12.dp),
-                isError = dataError != null
-            )
-            ExposedDropdownMenu(
-                expanded = formState.claimIdExpanded,
-                onDismissRequest = { formState.claimIdExpanded = false }
-            ) {
-                if (claims.isEmpty()) {
-                    DropdownMenuItem(
-                        text = { Text("Tidak ada data") },
-                        onClick = { }
-                    )
-                } else {
-                    claims.forEach { item ->
-                        DropdownMenuItem(
-                            text = { Text(item) },
-                            onClick = {
-                                formState.claimId = item
-                                formState.claimIdExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         ExposedDropdownMenuBox(
             expanded = formState.hospitalExpanded,
@@ -301,37 +225,16 @@ fun NewClaimDetectionScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        ExposedDropdownMenuBox(
-            expanded = formState.diagnosisExpanded,
-            onExpandedChange = { formState.diagnosisExpanded = !formState.diagnosisExpanded && !isLoading }
-        ) {
-            OutlinedTextField(
-                value = formState.diagnosis,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Diagnosis") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = formState.diagnosisExpanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                enabled = !isLoading,
-                shape = RoundedCornerShape(12.dp)
-            )
-            ExposedDropdownMenu(
-                expanded = formState.diagnosisExpanded,
-                onDismissRequest = { formState.diagnosisExpanded = false }
-            ) {
-                diagnoses.forEach { item ->
-                    DropdownMenuItem(
-                        text = { Text(item) },
-                        onClick = {
-                            formState.diagnosis = item
-                            formState.diagnosisExpanded = false
-                        }
-                    )
-                }
-            }
-        }
+        OutlinedTextField(
+            value = formState.diagnosisId,
+            onValueChange = { formState.diagnosisId = it },
+            label = { Text("Diagnosis ID") },
+            placeholder = { Text("Contoh: I63, E11, J18") },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -348,66 +251,41 @@ fun NewClaimDetectionScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Medical Resume",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.fillMaxWidth()
+        OutlinedTextField(
+            value = formState.primaryProcedure,
+            onValueChange = { formState.primaryProcedure = it },
+            label = { Text("Primary Procedure") },
+            placeholder = { Text("Contoh: CT Scan, MRI, X-Ray") },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = formState.symptoms,
-            onValueChange = { formState.symptoms = it },
-            label = { Text("Symptoms") },
-            placeholder = { Text("Contoh: Demam tinggi, batuk, sakit kepala") },
+            value = formState.secondaryProcedure,
+            onValueChange = { formState.secondaryProcedure = it },
+            label = { Text("Secondary Procedure") },
+            placeholder = { Text("Contoh: Blood Test, ECG") },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading,
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = formState.diagnosisText,
+            onValueChange = { formState.diagnosisText = it },
+            label = { Text("Diagnosis Text") },
+            placeholder = { Text("Contoh: Cerebral infarction, Diabetes mellitus") },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading,
             minLines = 2,
             maxLines = 3,
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = formState.treatment,
-            onValueChange = { formState.treatment = it },
-            label = { Text("Treatment") },
-            placeholder = { Text("Contoh: Rawat inap, observasi 24 jam") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-            minLines = 2,
-            maxLines = 3,
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = formState.medications,
-            onValueChange = { formState.medications = it },
-            label = { Text("Medications") },
-            placeholder = { Text("Contoh: Paracetamol 500mg, Amoxicillin 250mg") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-            minLines = 2,
-            maxLines = 3,
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = formState.notes,
-            onValueChange = { formState.notes = it },
-            label = { Text("Additional Notes") },
-            placeholder = { Text("Catatan tambahan tentang kondisi pasien") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-            minLines = 2,
-            maxLines = 4,
             shape = RoundedCornerShape(12.dp)
         )
 
@@ -417,15 +295,13 @@ fun NewClaimDetectionScreen(
             onClick = {
                 onIntent(
                     FraudDetectionIntent.SubmitNewClaim(
-                        formState.claimId,
                         formState.hospitalId,
                         formState.doctorId,
-                        formState.diagnosis,
+                        formState.diagnosisId,
                         formState.totalCostValue,
-                        formState.symptoms,
-                        formState.treatment,
-                        formState.medications,
-                        formState.notes
+                        formState.primaryProcedure,
+                        formState.secondaryProcedure,
+                        formState.diagnosisText
                     )
                 )
             },

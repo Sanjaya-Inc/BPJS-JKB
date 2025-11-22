@@ -5,18 +5,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class NewClaimRequest(
-    @SerialName("claim_id")
-    val claimId: String,
-    @SerialName("doctor_id")
-    val doctorId: String,
     @SerialName("hospital_id")
     val hospitalId: String,
-    @SerialName("diagnosis")
-    val diagnosis: String,
+    @SerialName("doctor_id")
+    val doctorId: String,
+    @SerialName("diagnosa_id")
+    val diagnosisId: String,
     @SerialName("total_cost")
-    val totalCost: Double,
-    @SerialName("label")
-    val label: String,
-    @SerialName("medical_resume_json")
-    val medicalResumeJson: String
+    val totalCost: Int,
+    @SerialName("primary_procedure")
+    val primaryProcedure: String,
+    @SerialName("secondary_procedure")
+    val secondaryProcedure: String,
+    @SerialName("diagnosis_text")
+    val diagnosisText: String
 )

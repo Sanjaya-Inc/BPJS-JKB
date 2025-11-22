@@ -11,20 +11,17 @@ import androidx.compose.ui.text.input.TextFieldValue
 
 @Stable
 class NewClaimFormState(
-    initialClaimId: String = "",
     initialHospitalId: String = "",
     initialDoctorId: String = "",
-    initialDiagnosis: String = "",
+    initialDiagnosisId: String = "",
     initialTotalCost: String = "",
-    initialSymptoms: String = "",
-    initialTreatment: String = "",
-    initialMedications: String = "",
-    initialNotes: String = ""
+    initialPrimaryProcedure: String = "",
+    initialSecondaryProcedure: String = "",
+    initialDiagnosisText: String = ""
 ) {
-    var claimId by mutableStateOf(initialClaimId)
     var hospitalId by mutableStateOf(initialHospitalId)
     var doctorId by mutableStateOf(initialDoctorId)
-    var diagnosis by mutableStateOf(initialDiagnosis)
+    var diagnosisId by mutableStateOf(initialDiagnosisId)
 
     private var totalCostRaw by mutableStateOf(initialTotalCost)
     var totalCostField by mutableStateOf(
@@ -35,28 +32,24 @@ class NewClaimFormState(
     )
         private set
 
-    var symptoms by mutableStateOf(initialSymptoms)
-    var treatment by mutableStateOf(initialTreatment)
-    var medications by mutableStateOf(initialMedications)
-    var notes by mutableStateOf(initialNotes)
+    var primaryProcedure by mutableStateOf(initialPrimaryProcedure)
+    var secondaryProcedure by mutableStateOf(initialSecondaryProcedure)
+    var diagnosisText by mutableStateOf(initialDiagnosisText)
 
-    var claimIdExpanded by mutableStateOf(false)
     var hospitalExpanded by mutableStateOf(false)
     var doctorExpanded by mutableStateOf(false)
-    var diagnosisExpanded by mutableStateOf(false)
 
     val totalCostValue: String
         get() = totalCostRaw
 
     val isFormValid: Boolean
-        get() = claimId.isNotBlank() &&
-            hospitalId.isNotBlank() &&
+        get() = hospitalId.isNotBlank() &&
             doctorId.isNotBlank() &&
-            diagnosis.isNotBlank() &&
+            diagnosisId.isNotBlank() &&
             totalCostRaw.isNotBlank() &&
-            symptoms.isNotBlank() &&
-            treatment.isNotBlank() &&
-            medications.isNotBlank()
+            primaryProcedure.isNotBlank() &&
+            secondaryProcedure.isNotBlank() &&
+            diagnosisText.isNotBlank()
 
     fun updateTotalCost(newValue: TextFieldValue) {
         val digitsOnly = newValue.text.filter { it.isDigit() }
@@ -108,44 +101,36 @@ class NewClaimFormState(
     }
 
     fun reset() {
-        claimId = ""
         hospitalId = ""
         doctorId = ""
-        diagnosis = ""
+        diagnosisId = ""
         totalCostRaw = ""
         totalCostField = TextFieldValue("")
-        symptoms = ""
-        treatment = ""
-        medications = ""
-        notes = ""
-        claimIdExpanded = false
+        primaryProcedure = ""
+        secondaryProcedure = ""
+        diagnosisText = ""
         hospitalExpanded = false
         doctorExpanded = false
-        diagnosisExpanded = false
     }
 }
 
 @Composable
 fun rememberNewClaimFormState(
-    initialClaimId: String = "",
     initialHospitalId: String = "",
     initialDoctorId: String = "",
-    initialDiagnosis: String = "",
+    initialDiagnosisId: String = "",
     initialTotalCost: String = "",
-    initialSymptoms: String = "",
-    initialTreatment: String = "",
-    initialMedications: String = "",
-    initialNotes: String = ""
+    initialPrimaryProcedure: String = "",
+    initialSecondaryProcedure: String = "",
+    initialDiagnosisText: String = ""
 ): NewClaimFormState = remember {
     NewClaimFormState(
-        initialClaimId,
         initialHospitalId,
         initialDoctorId,
-        initialDiagnosis,
+        initialDiagnosisId,
         initialTotalCost,
-        initialSymptoms,
-        initialTreatment,
-        initialMedications,
-        initialNotes
+        initialPrimaryProcedure,
+        initialSecondaryProcedure,
+        initialDiagnosisText
     )
 }

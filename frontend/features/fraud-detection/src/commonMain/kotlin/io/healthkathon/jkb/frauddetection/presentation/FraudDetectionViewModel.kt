@@ -4,7 +4,6 @@ import io.healthkathon.jkb.core.presentation.utils.BaseViewModel
 import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.domain.FraudDetectionRepository
-import io.healthkathon.jkb.frauddetection.domain.model.MedicalResume
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -50,15 +49,13 @@ sealed interface FraudDetectionIntent {
     data object SubmitSelectedClaim : FraudDetectionIntent
     data class SearchClaims(val query: String) : FraudDetectionIntent
     data class SubmitNewClaim(
-        val claimId: String,
         val hospitalId: String,
         val doctorId: String,
-        val diagnosis: String,
+        val diagnosisId: String,
         val totalCost: String,
-        val symptoms: String,
-        val treatment: String,
-        val medications: String,
-        val notes: String
+        val primaryProcedure: String,
+        val secondaryProcedure: String,
+        val diagnosisText: String
     ) : FraudDetectionIntent
     data class SubmitActorAnalysis(val actorType: ActorType, val actorId: String) : FraudDetectionIntent
     data object LoadHospitals : FraudDetectionIntent
@@ -81,15 +78,13 @@ class FraudDetectionViewModel(
             is FraudDetectionIntent.SubmitSelectedClaim -> submitSelectedClaim()
             is FraudDetectionIntent.SearchClaims -> searchClaims(intent.query)
             is FraudDetectionIntent.SubmitNewClaim -> submitNewClaim(
-                intent.claimId,
                 intent.hospitalId,
                 intent.doctorId,
-                intent.diagnosis,
+                intent.diagnosisId,
                 intent.totalCost,
-                intent.symptoms,
-                intent.treatment,
-                intent.medications,
-                intent.notes
+                intent.primaryProcedure,
+                intent.secondaryProcedure,
+                intent.diagnosisText
             )
             is FraudDetectionIntent.SubmitActorAnalysis -> submitActorAnalysis(
                 intent.actorType,
@@ -250,40 +245,54 @@ class FraudDetectionViewModel(
     }
 
     private fun submitNewClaim(
-        claimId: String,
         hospitalId: String,
         doctorId: String,
-        diagnosis: String,
+        diagnosisId: String,
         totalCost: String,
-        symptoms: String,
-        treatment: String,
-        medications: String,
-        notes: String
+        primaryProcedure: String,
+        secondaryProcedure: String,
+        diagnosisText: String
     ) = intent {
         reduce { state.copy(isLoading = true, result = null, feedbackGiven = false) }
 
-        val costValue = totalCost.replace(Regex("[^0-9.]"), "").toDoubleOrNull() ?: 0.0
-        val medicalResume = MedicalResume(
-            symptoms = symptoms,
-            treatment = treatment,
-            medications = medications,
-            notes = notes
-        )
+        val costValue = totalCost.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
 
         repository.checkNewClaim(
-            claimId = claimId,
             hospitalId = hospitalId,
             doctorId = doctorId,
-            diagnosis = diagnosis,
+            diagnosisId = diagnosisId,
             totalCost = costValue,
-            medicalResume = medicalResume
+            primaryProcedure = primaryProcedure,
+            secondaryProcedure = secondaryProcedure,
+            diagnosisText = diagnosisText
         )
             .onSuccess { response ->
+                val formattedResult = """
+# 📊 Hasil Analisis Fraud - Klaim Baru
+
+## Ringkasan Data
+${response.formDataSummary}
+
+---
+
+## 🎯 Hasil Validasi
+**Status**: ${if (response.validationResult == "FRAUD") "⚠️ FRAUD" else "✅ NORMAL"}  
+**Confidence Score**: ${response.confidenceScore}%
+
+---
+
+${response.detailAnalysis}
+
+---
+
+${response.explanation}
+                """.trimIndent()
+
                 reduce {
                     state.copy(
                         isLoading = false,
-                        result = response.answer,
-                        currentClaimId = claimId,
+                        result = formattedResult,
+                        currentClaimId = "NEW_CLAIM",
                         currentActorType = null,
                         currentActorId = null,
                         feedbackGiven = false

@@ -13,6 +13,7 @@ import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.data.model.HospitalResponse
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
+import io.healthkathon.jkb.frauddetection.data.model.NewClaimResponse
 import kotlinx.coroutines.delay
 
 class FraudDetectionMockedApi : FraudDetectionRemoteApi {
@@ -221,31 +222,34 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
         )
     }
 
-    override suspend fun checkNewClaim(newClaimRequest: NewClaimRequest): ClaimCheckAnswerData {
+    override suspend fun checkNewClaim(newClaimRequest: NewClaimRequest): NewClaimResponse {
         delay(2500)
 
         val hospitalName = newClaimRequest.hospitalId
         val doctorName = newClaimRequest.doctorId
-        val costValue = newClaimRequest.totalCost.toLong()
+        val costValue = newClaimRequest.totalCost
         val formattedCost = "Rp ${costValue.toString().reversed().chunked(3).joinToString(".").reversed()}"
 
-        val mockAnswer = """
-# Hasil Analisis Fraud - Klaim Baru
+        val formDataSummary = """
+Hospital ID: $hospitalName
+Doctor ID: $doctorName
+Diagnosis ID: ${newClaimRequest.diagnosisId}
+Total Cost: $formattedCost
+Primary Procedure: ${newClaimRequest.primaryProcedure}
+Secondary Procedure: ${newClaimRequest.secondaryProcedure}
+Diagnosis Text: ${newClaimRequest.diagnosisText}
+        """.trimIndent()
 
-## 📊 Ringkasan Analisis
-**Status**: ✅ Klaim Normal  
-**Tingkat Risiko**: **RENDAH** (15%)  
-**Tanggal Analisis**: 21 November 2025, 14:30 WIB
+        val detailAnalysis = """
+# 📊 Analisis Detail Klaim
 
----
-
-## 🔍 Detail Klaim
-- **ID Klaim**: ${newClaimRequest.claimId}
-- **Rumah Sakit**: $hospitalName
-- **Dokter**: $doctorName
-- **Diagnosis**: ${newClaimRequest.diagnosis}
+## Informasi Klaim
+- **Hospital ID**: $hospitalName
+- **Doctor ID**: $doctorName
+- **Diagnosis ID**: ${newClaimRequest.diagnosisId}
 - **Biaya Total**: $formattedCost
-- **Label**: ${newClaimRequest.label}
+- **Prosedur Utama**: ${newClaimRequest.primaryProcedure}
+- **Prosedur Sekunder**: ${newClaimRequest.secondaryProcedure}
 
 ---
 
@@ -268,18 +272,6 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
 
 ---
 
-## 💡 Rekomendasi
-
-1. **Proses Klaim**
-   - ✅ Klaim dapat diproses untuk pembayaran
-   - Tidak diperlukan investigasi tambahan
-
-2. **Monitoring Rutin**
-   - Lanjutkan monitoring standar
-   - Update database pola klaim normal
-
----
-
 ## 📈 Skor Kredibilitas
 
 | Aspek | Skor | Status |
@@ -290,14 +282,37 @@ class FraudDetectionMockedApi : FraudDetectionRemoteApi {
 | Pola Historis | 88/100 | ✅ Good |
 
 **Skor Total**: **93/100** - Klaim Valid
+        """.trimIndent()
+
+        val explanation = """
+# 💡 Penjelasan Hasil Validasi
+
+## Kesimpulan
+Klaim ini telah melewati semua tahap validasi dengan hasil **NORMAL**. Tidak ditemukan indikasi fraud atau anomali yang mencurigakan.
+
+## Rekomendasi Tindakan
+
+### ✅ Proses Klaim
+- Klaim dapat diproses untuk pembayaran
+- Tidak diperlukan investigasi tambahan
+- Dokumentasi lengkap dan sesuai standar
+
+### 📊 Monitoring Rutin
+- Lanjutkan monitoring standar
+- Update database pola klaim normal
+- Catat sebagai referensi klaim valid
 
 ---
 
-**Catatan**: Klaim ini telah melewati semua validasi otomatis dan dapat diproses sesuai prosedur standar.
+**Catatan**: Analisis ini dihasilkan oleh sistem AI dengan tingkat kepercayaan 85%. Klaim telah melewati semua validasi otomatis dan dapat diproses sesuai prosedur standar.
         """.trimIndent()
 
-        return ClaimCheckAnswerData(
-            answer = mockAnswer,
+        return NewClaimResponse(
+            formDataSummary = formDataSummary,
+            validationResult = "NORMAL",
+            confidenceScore = 85,
+            detailAnalysis = detailAnalysis,
+            explanation = explanation,
             status = "success"
         )
     }

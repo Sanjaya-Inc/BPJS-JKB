@@ -11,12 +11,9 @@ import io.healthkathon.jkb.frauddetection.data.model.DoctorData
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalData
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
-import io.healthkathon.jkb.frauddetection.domain.model.MedicalResume
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
 @Single
@@ -44,32 +41,24 @@ class FraudDetectionRepository(
     }
 
     suspend fun checkNewClaim(
-        claimId: String,
         hospitalId: String,
         doctorId: String,
-        diagnosis: String,
-        totalCost: Double,
-        medicalResume: MedicalResume
-    ): Result<ClaimCheckAnswerData> {
+        diagnosisId: String,
+        totalCost: Int,
+        primaryProcedure: String,
+        secondaryProcedure: String,
+        diagnosisText: String
+    ): Result<io.healthkathon.jkb.frauddetection.data.model.NewClaimResponse> {
         return remoteApi.runCatching {
-            val medicalResumeJson = Json.encodeToString(
-                mapOf(
-                    "symptoms" to medicalResume.symptoms,
-                    "treatment" to medicalResume.treatment,
-                    "medications" to medicalResume.medications,
-                    "notes" to medicalResume.notes
-                )
-            )
-
             checkNewClaim(
                 NewClaimRequest(
-                    claimId = claimId,
                     hospitalId = hospitalId,
                     doctorId = doctorId,
-                    diagnosis = diagnosis,
+                    diagnosisId = diagnosisId,
                     totalCost = totalCost,
-                    label = "NORMAL",
-                    medicalResumeJson = medicalResumeJson
+                    primaryProcedure = primaryProcedure,
+                    secondaryProcedure = secondaryProcedure,
+                    diagnosisText = diagnosisText
                 )
             )
         }

@@ -14,6 +14,7 @@ import io.healthkathon.jkb.frauddetection.data.model.DoctorResponse
 import io.healthkathon.jkb.frauddetection.data.model.FeedbackResponse
 import io.healthkathon.jkb.frauddetection.data.model.HospitalResponse
 import io.healthkathon.jkb.frauddetection.data.model.NewClaimRequest
+import io.healthkathon.jkb.frauddetection.data.model.NewClaimResponse
 
 interface FraudDetectionRemoteApi {
 
@@ -35,10 +36,10 @@ interface FraudDetectionRemoteApi {
         @Body claimCheckRequest: ClaimCheckRequest
     ): ClaimCheckAnswerData
 
-    @POST("claim/new")
+    @POST("claims/verify-form")
     suspend fun checkNewClaim(
         @Body newClaimRequest: NewClaimRequest
-    ): ClaimCheckAnswerData
+    ): NewClaimResponse
 
     @POST("actor/analyze")
     suspend fun analyzeActor(
