@@ -100,6 +100,7 @@ class EntityExtractionTool(BaseTool):
             content = response.content.strip()
             content = self._clean_llm_response(content)
             json_content = self._extract_json(content)
+            print(f"[ENTITY_EXTRACTION] Extracted JSON Content: {json_content}")
             
             result = json.loads(json_content)
             return json.dumps(result, indent=2)

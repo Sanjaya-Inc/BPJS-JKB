@@ -1,11 +1,29 @@
 import sys
+import os
 import re
 from typing import Dict, Any
 
-from src.tool.tool_registry import ToolRegistry
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+
+from chatbot.src.tool.tool_registry import ToolRegistry
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
+from langchain_core.callbacks import BaseCallbackHandler
+
+
+class ToolExecutionLogger(BaseCallbackHandler):
+    """Custom callback handler to log tool executions in the API."""
+    
+    def on_tool_start(self, serialized, input_str, **kwargs):
+        """Run when a tool starts running."""
+        tool_name = serialized.get("name")
+        print(f"[API_LOG] 🛠️  Agent is entering tool: {tool_name}")
+        print(f"[API_LOG]    Input args: {input_str}")
+
+    def on_tool_end(self, output, **kwargs):
+        """Run when a tool ends running."""
+        print(f"[API_LOG] ✅ Tool execution finished.")
 
 
 class ChatbotService:
@@ -34,18 +52,19 @@ class ChatbotService:
                 You have 5 tools to help you create a correct, efficient, and precise Cypher query based on user questions.
                 1. entity_extraction: Extracts medical entities and relationships from user input
                 2. rag_enhanced_search: Performs semantic search across medical entities
-                3. context_builder: Combines query, entities, and RAG results into enriched context
-                4. schema_linking: Provides graph database schema definition
-                5. execute_cypher: Executes Cypher queries against the graph database
+                3. schema_linking: Provides graph database schema definition
+                4. execute_cypher: Executes Cypher queries against the graph database
 
-                Step-by-step
+                Step-by-step workflow to answer user questions (don't skip steps):
                 1. Extract medical entities from user question using entity_extraction
-                2. Use rag_enhanced_search with extracted entities to find similar items in the database
+                2. Use rag_enhanced_search with extracted entities to find similar items in the database.
                 3. Use schema_linking to understand the database structure
-                4. Use context_builder to create enriched context for query generation
-                5. Finally, use execute_cypher with the enriched context to get precise results
+                4. Generate Cypher query based on user question and enriched context
+                5. Execute the generated Cypher query using execute_cypher to get precise results
 
-                You can skip any tool if not needed.
+                Rule : 
+                - Maxium retry to generate Cypher query is 3 times.
+
                 Summary the final answer based on the query result and provide clear explanation.
                 """,
             ),
@@ -86,17 +105,26 @@ class ChatbotService:
             message = [
                 HumanMessage(f"This is the question: {user_input}"),
                 AIMessage("Understood. I will follow the workflow to answer the question."),
-                HumanMessage("Detect what language is the question input and respond in the same language."),
-                AIMessage("Understood. I will detect the input language and respond accordingly.")
+                HumanMessage("Use the search result from RAG to enrich your Cypher query generation. Because the question may not be directly mapped to the database schema."),
+                AIMessage("Got it. I will enrich the context using RAG results."),
+                HumanMessage("You can use or lookup into a graph database schema from schema_linking tool to determine nodes, properties, and relationships."),
+                AIMessage("Understood. I will refer to the schema as needed."),
+                HumanMessage("Detect what language is the question input. Answer the question from the workflow using the same language as the input question."),
+                AIMessage("Got it. I will answer in the same language as the input question."),
             ]
             
             # Combine base chat history with current message
             final_messages = self.base_chat_history + message
             
-            # Execute the agent
-            response = self.agent_executor.invoke({
-                "messages": final_messages,
-            })
+            # Create callback handler instance
+            callback_handler = ToolExecutionLogger()
+            
+            # Execute the agent with logging
+            print(f"[API_LOG] Processing question: {user_input}")
+            response = self.agent_executor.invoke(
+                {"messages": final_messages},
+                {"callbacks": [callback_handler]}
+            )
             
             # Extract raw content from response
             raw_content = response['messages'][-1].content

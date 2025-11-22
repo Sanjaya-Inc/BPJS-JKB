@@ -1,6 +1,10 @@
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 from neo4j import GraphDatabase
-from src.config import NEO4J_URI, NEO4J_AUTH
+from chatbot.src.config import NEO4J_URI, NEO4J_AUTH
 
 logger = logging.getLogger(__name__)
 

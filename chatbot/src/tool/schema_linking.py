@@ -3,20 +3,12 @@ from typing import Type
 from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 
-class QuestionInput(BaseModel):
-    """Input schema for the schema_linking tool."""
-    question: str = Field(
-        description="The user's natural language question to be linked to the graph database schema."
-    )
 
 class SchemaLinkingTool(BaseTool):
     name: str = "schema_linking"
     description: str = """
-    Use this tool to retrieve the database schema (Nodes, Properties, and Relationships) 
-    required to translate a natural language question into a Cypher query.
-    Returns the graph structure, property data types, and sample values based on the uploaded CSV datasets.
+      Provides the graph database schema definition, including nodes, properties, and relationship paths.
     """
-    args_schema: Type[BaseModel] = QuestionInput
 
     def _run(self, question: str) -> str:
         return """

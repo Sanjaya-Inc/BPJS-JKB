@@ -4,7 +4,11 @@ from langchain_core.tools import BaseTool
 from langchain_community.vectorstores import Neo4jVector
 from langchain_openai import OpenAIEmbeddings
 from neo4j import GraphDatabase
-from src.config import NEO4J_URI, NEO4J_AUTH
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+
+from chatbot.src.config import NEO4J_URI, NEO4J_AUTH
 
 # --- 1. Input Schema ---
 class EntityRiskInput(BaseModel):

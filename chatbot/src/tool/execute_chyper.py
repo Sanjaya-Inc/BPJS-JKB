@@ -1,10 +1,14 @@
 import json
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+
 from neo4j import GraphDatabase
 from langchain.tools import tool
 from pydantic import BaseModel, Field
 from typing import Type, List, Any
 from langchain_core.tools import BaseTool
-from src.config import NEO4J_URI, NEO4J_AUTH
+from chatbot.src.config import NEO4J_URI, NEO4J_AUTH
 
 # 1. Neo4j Connection Details (imported from config)
 URI = NEO4J_URI
@@ -43,6 +47,7 @@ class ExecuteCypherTool(BaseTool):
     args_schema: Type[BaseModel] = CypherInput
 
     def _run(self, cypher_query: str) -> str:
+        print(f"[EXECUTE_CYPHER] Executing query: {cypher_query}")
         driver = None
         try:
             # 1. Connect to the Database
@@ -57,11 +62,14 @@ class ExecuteCypherTool(BaseTool):
                 
                 # 3. Process Results
                 if not result:
+                    print(f"[EXECUTE_CYPHER] Query returned no results")
                     return "Query executed successfully but returned no results."
 
                 # Convert Neo4j records to native Python dictionaries
                 # record.data() automatically converts Nodes and Relationships to dicts
                 data = [record.data() for record in result]
+                
+                print(f"[EXECUTE_CYPHER] Query returned {len(data)} results")
                 
                 # 4. Return formatted JSON
                 # We use the custom serializer to handle Dates and Points safely

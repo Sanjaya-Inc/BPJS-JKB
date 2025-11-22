@@ -1,8 +1,12 @@
-from src.tool.schema_linking import SchemaLinkingTool
-from src.tool.execute_chyper import ExecuteCypherTool
-from src.tool.entity_extraction import EntityExtractionTool
-from src.tool.rag_enhanced_search import RagEnhancedSearchTool
-from src.tool.context_builder import ContextBuilderTool
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+
+from chatbot.src.tool.schema_linking import SchemaLinkingTool
+from chatbot.src.tool.execute_chyper import ExecuteCypherTool
+from chatbot.src.tool.entity_extraction import EntityExtractionTool
+from chatbot.src.tool.rag_enhanced_search import RagEnhancedSearchTool
+from chatbot.src.tool.context_builder import ContextBuilderTool
 
 class ToolRegistry:
     def __init__(self):
@@ -11,7 +15,6 @@ class ToolRegistry:
             "execute_cypher": ExecuteCypherTool(),
             "entity_extraction": EntityExtractionTool(),
             "rag_enhanced_search": RagEnhancedSearchTool(),
-            "context_builder": ContextBuilderTool()
         }
     
     def get_tools(self):
