@@ -162,3 +162,26 @@ class HealthcareRepository:
                d.severity_level AS severity_level
         """
         return self.run_query(query, {"diagnosis_id": diagnosis_id})
+
+    def analyze_hospital_claiming_behavior(self, hospital_id: str) -> Dict:
+        """Analyze hospital behavior on claiming using normal distribution."""
+        query = """
+        MATCH (h:Hospital {id: $hospital_id})<-[:SUBMITTED_AT]-(c:Claim)-[:CODED_AS]->(d:Diagnosis)
+        WHERE d.market_avg_cost IS NOT NULL
+        RETURN 
+            h.name as hospital_name,
+            d.code as diagnosis_id,
+            d.name as diagnosis_name, 
+            count(c) as total_claims,      
+            avg(c.z_score) as z_score
+        ORDER BY z_score DESC
+        """
+        results = self.run_query(query, {"hospital_id": hospital_id})
+        
+        # Extract hospital name from first result (all rows have same hospital)
+        hospital_name = results[0]["hospital_name"] if results else "Unknown Hospital"
+        
+        return {
+            "hospital_name": hospital_name,
+            "analysis_data": results
+        }

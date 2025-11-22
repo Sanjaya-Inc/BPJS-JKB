@@ -86,3 +86,16 @@ class ClaimFormVerificationResponse(BaseModel):
     explanation: str = Field(..., description="Detailed explanation of the validation")
     status: str = Field(default="success", description="Response status")
     metadata: Optional[dict] = Field(default=None, description="Additional metadata from processing")
+
+# Hospital Analysis schemas
+class HospitalAnalysisItem(BaseModel):
+    diagnosis_id: str = Field(..., description="Diagnosis node ID")
+    diagnosis_name: str = Field(..., description="Diagnosis name")
+    total_claims: int = Field(..., description="Total number of claims for this diagnosis")
+    z_score: float = Field(..., description="Z-score indicating deviation from normal claiming patterns")
+
+class HospitalAnalysisResponse(BaseModel):
+    data: List[HospitalAnalysisItem]
+    hospital_id: str = Field(..., description="Hospital ID")
+    hospital_name: str = Field(..., description="Hospital name")
+    analysis_type: str = Field(default="claiming_behavior_normal_distribution", description="Type of analysis performed")

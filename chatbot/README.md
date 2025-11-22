@@ -5,6 +5,7 @@ A FastAPI-based REST API for accessing BPJS-JKB data from a Neo4j graph database
 ## Features
 
 - **GET /hospitals** - Retrieve hospital data with specialties and facilities
+- **GET /hospitals/{hospital_id}/analyze** - Analyze hospital claiming behavior using normal distribution
 - **GET /doctors** - Retrieve doctor information with hospital associations
 - **GET /claims** - Retrieve claims data with diagnosis and costs
 - **GET /diagnoses** - Retrieve diagnosis information with filtering capabilities
@@ -15,6 +16,7 @@ A FastAPI-based REST API for accessing BPJS-JKB data from a Neo4j graph database
 - **Filtering Support** - Query parameters for filtering results
 - **Neo4j Integration** - Direct queries to graph database
 - **AI/ML Integration** - LLM-powered analysis and fraud detection
+- **Statistical Analysis** - Normal distribution-based hospital behavior analysis
 - **CSV-like JSON Response** - Simple, predictable response format
 - **Comprehensive Testing** - Full test suite with mocking
 - **Auto Documentation** - OpenAPI/Swagger docs at `/docs`
@@ -58,6 +60,7 @@ pip3 install -r requirements.txt
 ```bash
 python3 data/upsert_initial_data.py
 python3 data/setup_indicies.py
+python3 data/calculate_diagnosis_benchmarks.py
 ```
 
 ## Running the API
@@ -76,6 +79,77 @@ Once the server is running, visit:
 - **ReDoc documentation:** `http://localhost:8000/redoc`
 
 ## Endpoints
+
+### GET /hospitals/{hospital_id}/analyze
+
+**Analyze hospital behavior on claiming using normal distribution.** This endpoint provides statistical analysis of a hospital's claiming patterns to identify potential anomalies.
+
+**Path Parameters:**
+- `hospital_id` (required): The hospital identifier (e.g., "HOS001")
+
+**Analysis Process:**
+The system performs a statistical analysis by:
+1. **Claims Aggregation**: Groups all claims submitted to the specified hospital by diagnosis
+2. **Normal Distribution Analysis**: Calculates Z-scores for each diagnosis to measure deviation from expected patterns
+3. **Statistical Ranking**: Orders results by Z-score (highest deviations first)
+4. **Anomaly Detection**: Identifies potential claiming anomalies based on statistical patterns
+
+**Example Request:**
+```bash
+# Analyze claiming behavior for a specific hospital
+curl "http://localhost:8000/hospitals/HOS001/analyze"
+```
+
+**Example Response:**
+```json
+{
+  "data": [
+    {
+      "diagnosis_id": "D001",
+      "diagnosis_name": "Acute Myocardial Infarction",
+      "total_claims": 25,
+      "z_score": 2.8
+    },
+    {
+      "diagnosis_id": "D013", 
+      "diagnosis_name": "Cerebral Infarction",
+      "total_claims": 18,
+      "z_score": 1.9
+    },
+    {
+      "diagnosis_id": "D007",
+      "diagnosis_name": "Pneumonia",
+      "total_claims": 45,
+      "z_score": 0.3
+    }
+  ],
+  "hospital_id": "HOS001",
+  "hospital_name": "RSUP Dr. Hasan Sadikin (RSHS)",
+  "analysis_type": "claiming_behavior_normal_distribution"
+}
+```
+
+**Response Fields:**
+- `data`: Array of diagnosis claiming analysis
+  - `diagnosis_id`: Diagnosis identifier
+  - `diagnosis_name`: Human-readable diagnosis name
+  - `total_claims`: Total number of claims for this diagnosis at the hospital
+  - `z_score`: Statistical Z-score indicating deviation from normal patterns
+- `hospital_id`: Hospital identifier
+- `hospital_name`: Hospital name for context
+- `analysis_type`: Type of analysis performed
+
+**Z-Score Interpretation:**
+- **Z-Score > 2.0**: Significant positive deviation (potentially suspicious high claiming)
+- **Z-Score 1.0-2.0**: Moderate positive deviation (above average claiming)
+- **Z-Score -1.0 to 1.0**: Normal claiming pattern
+- **Z-Score < -1.0**: Below average claiming pattern
+
+**Use Cases:**
+- **Fraud Detection**: Identify hospitals with unusual claiming patterns
+- **Quality Assurance**: Monitor hospital performance and compliance
+- **Resource Planning**: Understand hospital specialization patterns
+- **Risk Assessment**: Evaluate hospitals for insurance risk management
 
 ### GET /hospitals
 

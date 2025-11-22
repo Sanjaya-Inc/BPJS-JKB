@@ -11,7 +11,7 @@ from typing import Optional, AsyncGenerator
 # Imports
 from chatbot.src.database import db
 from .repository import HealthcareRepository
-from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, DiagnosisResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse, ClaimFormVerificationRequest, ClaimFormVerificationResponse
+from .schemas import HospitalResponse, DoctorResponse, ClaimResponse, DiagnosisResponse, QuestionRequest, ChatbotResponse, ClaimVerificationRequest, ClaimVerificationResponse, ClaimFormVerificationRequest, ClaimFormVerificationResponse, HospitalAnalysisResponse
 from .chatbot_service import ChatbotService
 from .claim_verification_service import ClaimVerificationService
 
@@ -141,6 +141,42 @@ def get_diagnosis_by_id(
 ):
     results = repo.get_diagnosis_by_id(diagnosis_id)
     return {"data": results}
+
+@app.get("/hospitals/{hospital_id}/analyze", response_model=HospitalAnalysisResponse, tags=["Hospitals"])
+def analyze_hospital_claiming_behavior(
+    hospital_id: str,
+    repo: HealthcareRepository = Depends(get_repository)
+):
+    """
+    Analyze hospital behavior on claiming using normal distribution.
+    
+    This endpoint analyzes a hospital's claiming patterns by examining:
+    - Claims submitted to the specified hospital  
+    - Diagnoses associated with those claims (with diagnosis IDs)
+    - Z-scores indicating deviation from normal claiming patterns
+    - Results ordered by Z-score (highest deviation first)
+    
+    The analysis uses normal distribution to identify potential anomalies in claiming behavior.
+    Higher Z-scores indicate greater deviation from expected claiming patterns.
+    
+    Returns both diagnosis details and hospital information for comprehensive analysis.
+    """
+    from fastapi import HTTPException
+    
+    result = repo.analyze_hospital_claiming_behavior(hospital_id)
+    
+    if not result["analysis_data"]:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No claiming data found for hospital {hospital_id}"
+        )
+    
+    return {
+        "data": result["analysis_data"],
+        "hospital_id": hospital_id,
+        "hospital_name": result["hospital_name"],
+        "analysis_type": "claiming_behavior_normal_distribution"
+    }
 
 @app.post("/chatbot/ask", response_model=ChatbotResponse, tags=["Chatbot"])
 def ask_chatbot(
